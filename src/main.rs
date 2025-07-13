@@ -50,9 +50,7 @@ impl eframe::App for MyApp {
             }
             ui.label(format!("Hello '{}', age {}", self.name, self.age));
 
-            ui.image(egui::include_image!(
-                "../../../crates/egui/assets/ferris.png"
-            ));
+            ui.image(egui::include_image!("../assets/ferris.png"));
         });
     }
 }
