@@ -2,55 +2,205 @@
 #![allow(rustdoc::missing_crate_level_docs)] // it's an example
 
 use eframe::egui;
+use std::collections::VecDeque;
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([320.0, 240.0]),
+        viewport: egui::ViewportBuilder::default().with_inner_size([800.0, 600.0]),
         ..Default::default()
     };
     eframe::run_native(
-        "My egui App",
+        "Murack Sync",
         options,
         Box::new(|cc| {
             // This gives us image support:
             egui_extras::install_image_loaders(&cc.egui_ctx);
 
-            Ok(Box::<MyApp>::default())
+            Ok(Box::<MurackSyncApp>::default())
         }),
     )
 }
 
-struct MyApp {
-    name: String,
-    age: u32,
+#[derive(Clone)]
+enum MessageType {
+    Log,
+    Error,
 }
 
-impl Default for MyApp {
+#[derive(Clone)]
+struct Message {
+    message_type: MessageType,
+    text: String,
+}
+
+struct Console {
+    messages: VecDeque<Message>,
+}
+
+impl Default for Console {
     fn default() -> Self {
         Self {
-            name: "Arthur".to_owned(),
-            age: 42,
+            messages: VecDeque::new(),
         }
     }
 }
 
-impl eframe::App for MyApp {
+impl Console {
+    fn add_log(&mut self, text: String) {
+        self.messages.push_back(Message {
+            message_type: MessageType::Log,
+            text,
+        });
+        // Keep only last 1000 messages
+        if self.messages.len() > 1000 {
+            self.messages.pop_front();
+        }
+    }
+
+    fn add_error(&mut self, text: String) {
+        self.messages.push_back(Message {
+            message_type: MessageType::Error,
+            text,
+        });
+        // Keep only last 1000 messages
+        if self.messages.len() > 1000 {
+            self.messages.pop_front();
+        }
+    }
+
+    fn show(&mut self, ui: &mut egui::Ui) {
+        egui::ScrollArea::vertical()
+            .stick_to_bottom(true)
+            .show(ui, |ui| {
+                ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                    for message in &self.messages {
+                        let color = match message.message_type {
+                            MessageType::Log => egui::Color32::LIGHT_GRAY,
+                            MessageType::Error => egui::Color32::LIGHT_RED,
+                        };
+                        ui.colored_label(color, &message.text);
+                    }
+                });
+            });
+    }
+}
+
+struct HeaderForm {
+    command_description: String,
+}
+
+impl HeaderForm {
+    fn new(command_description: String) -> Self {
+        Self {
+            command_description,
+        }
+    }
+
+    fn show<F>(&self, ui: &mut egui::Ui, content: F, on_run: Option<&dyn Fn()>)
+    where
+        F: FnOnce(&mut egui::Ui),
+    {
+        ui.vertical_centered(|ui| {
+            ui.add_space(10.0);
+            ui.label(&self.command_description);
+            ui.add_space(10.0);
+            
+            content(ui);
+            
+            ui.add_space(10.0);
+            if ui.button("実行").clicked() {
+                if let Some(callback) = on_run {
+                    callback();
+                }
+            }
+        });
+    }
+}
+
+struct PageAdd {
+    songs_path: String,
+    header_form: HeaderForm,
+}
+
+impl Default for PageAdd {
+    fn default() -> Self {
+        Self {
+            songs_path: String::new(),
+            header_form: HeaderForm::new("曲をライブラリに追加".to_string()),
+        }
+    }
+}
+
+impl PageAdd {
+    fn show(&mut self, ui: &mut egui::Ui) -> bool {
+        ui.vertical_centered(|ui| {
+            ui.add_space(10.0);
+            ui.label(&self.header_form.command_description);
+            ui.add_space(10.0);
+            
+            ui.horizontal(|ui| {
+                ui.label("追加する曲のライブラリパス:");
+                ui.text_edit_singleline(&mut self.songs_path);
+            });
+            
+            ui.add_space(10.0);
+            ui.button("実行").clicked()
+        }).inner
+    }
+}
+
+struct MurackSyncApp {
+    console: Console,
+    page_add: PageAdd,
+}
+
+impl Default for MurackSyncApp {
+    fn default() -> Self {
+        Self {
+            console: Console::default(),
+            page_add: PageAdd::default(),
+        }
+    }
+}
+
+impl eframe::App for MurackSyncApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("My egui Application");
-            ui.horizontal(|ui| {
-                let name_label = ui.label("Your name: ");
-                ui.text_edit_singleline(&mut self.name)
-                    .labelled_by(name_label.id);
-            });
-            ui.add(egui::Slider::new(&mut self.age, 0..=120).text("age"));
-            if ui.button("Increment").clicked() {
-                self.age += 1;
-            }
-            ui.label(format!("Hello '{}', age {}", self.name, self.age));
+            ui.vertical(|ui| {
+                // Header area for command input
+                ui.allocate_ui_with_layout(
+                    [ui.available_width(), 200.0].into(),
+                    egui::Layout::top_down(egui::Align::Center),
+                    |ui| {
+                        if self.page_add.show(ui) {
+                            // TODO: 実際のadd処理を実装
+                            self.console.add_log(format!("[INFO] add コマンドを実行: {}", self.page_add.songs_path));
+                            self.console.add_log("[INFO] add 処理が完了しました".to_string());
+                        }
+                    },
+                );
 
-            ui.image(egui::include_image!("../assets/ferris.png"));
+                ui.separator();
+
+                // Console area
+                ui.allocate_ui_with_layout(
+                    [ui.available_width(), ui.available_height()].into(),
+                    egui::Layout::top_down(egui::Align::LEFT),
+                    |ui| {
+                        ui.label("Console:");
+                        ui.add_space(5.0);
+                        
+                        egui::Frame::new()
+                            .fill(egui::Color32::from_rgb(34, 34, 34))
+                            .stroke(egui::Stroke::new(1.0, egui::Color32::WHITE))
+                            .inner_margin(egui::Margin::same(8))
+                            .show(ui, |ui| {
+                                self.console.show(ui);
+                            });
+                    },
+                );
+            });
         });
     }
 }
