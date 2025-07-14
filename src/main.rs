@@ -17,9 +17,34 @@ fn main() -> eframe::Result {
             // This gives us image support:
             egui_extras::install_image_loaders(&cc.egui_ctx);
 
+            // Setup Japanese font
+            setup_fonts(&cc.egui_ctx);
+
             Ok(Box::<MurackSyncApp>::default())
         }),
     )
+}
+
+fn setup_fonts(ctx: &egui::Context) {
+    let mut fonts = egui::FontDefinitions::default();
+    
+    // Add Japanese font
+    fonts.font_data.insert(
+        "noto_sans_cjk".to_owned(),
+        egui::FontData::from_static(include_bytes!("../assets/NotoSansCJK-Regular.otf")).into(),
+    );
+    
+    // Add Japanese font to default font families
+    fonts.families.entry(egui::FontFamily::Proportional)
+        .or_default()
+        .insert(0, "noto_sans_cjk".to_owned());
+        
+    fonts.families.entry(egui::FontFamily::Monospace)
+        .or_default()
+        .insert(0, "noto_sans_cjk".to_owned());
+    
+    // Apply font settings
+    ctx.set_fonts(fonts);
 }
 
 #[derive(Clone)]
