@@ -1,7 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 #![allow(rustdoc::missing_crate_level_docs)] // it's an example
 
-use eframe::egui;
+use eframe::egui::{self, Ui};
 use std::collections::VecDeque;
 
 fn main() -> eframe::Result {
@@ -34,16 +34,9 @@ struct Message {
     text: String,
 }
 
+#[derive(Default)]
 struct Console {
     messages: VecDeque<Message>,
-}
-
-impl Default for Console {
-    fn default() -> Self {
-        Self {
-            messages: VecDeque::new(),
-        }
-    }
 }
 
 impl Console {
@@ -150,17 +143,24 @@ impl PageAdd {
     }
 }
 
+#[derive(Default)]
 struct MurackSyncApp {
     console: Console,
     page_add: PageAdd,
 }
 
-impl Default for MurackSyncApp {
-    fn default() -> Self {
-        Self {
-            console: Console::default(),
-            page_add: PageAdd::default(),
+fn on_add_button(app:&mut MurackSyncApp, ui: &mut Ui) {
+    if app.page_add.show(ui) {
+        // TODO: 実際のadd処理を実装
+
+        let path = &app.page_add.songs_path;
+        if path.is_empty() {
+            app.console.add_error("[ERROR] 追加する曲のパスが未入力です".to_owned());
+            return;
         }
+
+        app.console.add_log(format!("[INFO] add コマンドを実行: {path}", ));
+        app.console.add_log("[INFO] add 処理が完了しました".to_string());
     }
 }
 
@@ -171,14 +171,7 @@ impl eframe::App for MurackSyncApp {
                 // Header area for command input
                 ui.allocate_ui_with_layout(
                     [ui.available_width(), 200.0].into(),
-                    egui::Layout::top_down(egui::Align::Center),
-                    |ui| {
-                        if self.page_add.show(ui) {
-                            // TODO: 実際のadd処理を実装
-                            self.console.add_log(format!("[INFO] add コマンドを実行: {}", self.page_add.songs_path));
-                            self.console.add_log("[INFO] add 処理が完了しました".to_string());
-                        }
-                    },
+                    egui::Layout::top_down(egui::Align::Center),|ui| on_add_button(self, ui),
                 );
 
                 ui.separator();
