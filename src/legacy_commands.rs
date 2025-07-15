@@ -20,7 +20,6 @@ impl LegacyCommandsApp {
 
             ui.separator();
 
-            // Header area for command input
             ui.allocate_ui_with_layout(
                 [ui.available_width(), 200.0].into(),
                 egui::Layout::top_down(egui::Align::Center),

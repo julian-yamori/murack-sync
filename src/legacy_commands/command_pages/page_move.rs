@@ -5,6 +5,7 @@ use crate::legacy_commands::{
     navigation::{CommandPage, PageType},
 };
 
+/// move コマンドのページ
 #[derive(Default)]
 pub struct PageMove {
     src_path: String,

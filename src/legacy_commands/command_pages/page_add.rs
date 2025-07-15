@@ -5,6 +5,7 @@ use crate::legacy_commands::{
     navigation::{CommandPage, PageType},
 };
 
+/// add コマンドのページ
 #[derive(Default)]
 pub struct PageAdd {
     songs_path: String,

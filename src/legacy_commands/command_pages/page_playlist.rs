@@ -5,6 +5,7 @@ use crate::legacy_commands::{
     navigation::{CommandPage, PageType},
 };
 
+/// playlist コマンドのページ
 #[derive(Default)]
 pub struct PagePlaylist;
 

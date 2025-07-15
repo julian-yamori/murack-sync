@@ -20,7 +20,6 @@ fn main() -> eframe::Result {
             // This gives us image support:
             egui_extras::install_image_loaders(&cc.egui_ctx);
 
-            // Setup Japanese font
             setup_fonts(&cc.egui_ctx);
 
             Ok(Box::<MurackSyncApp>::default())
