@@ -1,32 +1,22 @@
 mod command_pages;
 mod console;
 mod header_form;
+mod navigation;
 
 use eframe::egui;
 
-use crate::legacy_commands::{
-    command_pages::{PageAdd, PageMove, PagePlaylist},
-    console::Console,
-};
+use crate::legacy_commands::{console::Console, navigation::LegacyCommandsNavigation};
 
 #[derive(Default)]
 pub struct LegacyCommandsApp {
     console: Console,
-    page_add: PageAdd,
-    page_playlist: PagePlaylist,
-    page_move: PageMove,
-    current_tab: CommandTab,
+    navigation: LegacyCommandsNavigation,
 }
 
 impl LegacyCommandsApp {
     pub fn show(&mut self, ui: &mut egui::Ui) {
         ui.vertical(|ui| {
-            // Tab navigation
-            ui.horizontal(|ui| {
-                ui.selectable_value(&mut self.current_tab, CommandTab::Add, "add");
-                ui.selectable_value(&mut self.current_tab, CommandTab::Playlist, "playlist");
-                ui.selectable_value(&mut self.current_tab, CommandTab::Move, "move");
-            });
+            self.navigation.show_tab(ui);
 
             ui.separator();
 
@@ -34,11 +24,7 @@ impl LegacyCommandsApp {
             ui.allocate_ui_with_layout(
                 [ui.available_width(), 200.0].into(),
                 egui::Layout::top_down(egui::Align::Center),
-                |ui| match self.current_tab {
-                    CommandTab::Add => self.page_add.show(&mut self.console, ui),
-                    CommandTab::Playlist => self.page_playlist.show(&mut self.console, ui),
-                    CommandTab::Move => self.page_move.show(&mut self.console, ui),
-                },
+                |ui| self.navigation.current_page.show(&mut self.console, ui),
             );
 
             ui.separator();
@@ -62,12 +48,4 @@ impl LegacyCommandsApp {
             );
         });
     }
-}
-
-#[derive(Default, PartialEq)]
-enum CommandTab {
-    #[default]
-    Add,
-    Playlist,
-    Move,
 }
