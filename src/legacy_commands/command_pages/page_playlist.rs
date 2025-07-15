@@ -18,9 +18,7 @@ impl CommandPage for PagePlaylist {
         "DAPのプレイリストを更新"
     }
 
-    fn show_form(&mut self, ui: &mut Ui) {
-        ui.label("プレイリストを更新します（入力不要）");
-    }
+    fn show_form(&mut self, _ui: &mut Ui) {}
 
     fn run_command(&mut self, console: &mut Console) {
         // TODO: 実際のplaylist処理を実装
