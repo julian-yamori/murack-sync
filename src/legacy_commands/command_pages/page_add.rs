@@ -2,22 +2,12 @@ use eframe::egui::Ui;
 
 use crate::legacy_commands::{
     console::Console,
-    header_form::HeaderForm,
     navigation::{CommandPage, PageType},
 };
 
+#[derive(Default)]
 pub struct PageAdd {
     songs_path: String,
-    header_form: HeaderForm,
-}
-
-impl Default for PageAdd {
-    fn default() -> Self {
-        Self {
-            songs_path: String::new(),
-            header_form: HeaderForm::new("曲をライブラリに追加".to_string()),
-        }
-    }
 }
 
 impl PageAdd {
@@ -42,7 +32,7 @@ impl CommandPage for PageAdd {
     fn show(&mut self, console: &mut Console, ui: &mut Ui) {
         ui.vertical_centered(|ui| {
             ui.add_space(10.0);
-            ui.label(&self.header_form.command_description);
+            ui.label("曲をライブラリに追加");
             ui.add_space(10.0);
 
             ui.horizontal(|ui| {

@@ -45,7 +45,7 @@ impl PageType {
     pub fn build_default_page(&self) -> Box<dyn CommandPage> {
         match self {
             PageType::Add => Box::new(PageAdd::default()),
-            PageType::Playlist => Box::new(PagePlaylist::default()),
+            PageType::Playlist => Box::new(PagePlaylist {}),
             PageType::Move => Box::new(PageMove::default()),
         }
     }

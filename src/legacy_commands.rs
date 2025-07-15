@@ -1,6 +1,5 @@
 mod command_pages;
 mod console;
-mod header_form;
 mod navigation;
 
 use eframe::egui;

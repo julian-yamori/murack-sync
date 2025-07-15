@@ -2,24 +2,13 @@ use eframe::egui::Ui;
 
 use crate::legacy_commands::{
     console::Console,
-    header_form::HeaderForm,
     navigation::{CommandPage, PageType},
 };
 
+#[derive(Default)]
 pub struct PageMove {
     src_path: String,
     dest_path: String,
-    header_form: HeaderForm,
-}
-
-impl Default for PageMove {
-    fn default() -> Self {
-        Self {
-            src_path: String::new(),
-            dest_path: String::new(),
-            header_form: HeaderForm::new("ライブラリ内で曲のパスを移動".to_string()),
-        }
-    }
 }
 
 impl PageMove {
@@ -47,7 +36,7 @@ impl CommandPage for PageMove {
     fn show(&mut self, console: &mut Console, ui: &mut Ui) {
         ui.vertical_centered(|ui| {
             ui.add_space(10.0);
-            ui.label(&self.header_form.command_description);
+            ui.label("ライブラリ内で曲のパスを移動");
             ui.add_space(10.0);
 
             ui.horizontal(|ui| {

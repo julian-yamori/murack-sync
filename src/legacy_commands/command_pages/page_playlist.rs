@@ -2,21 +2,11 @@ use eframe::egui::Ui;
 
 use crate::legacy_commands::{
     console::Console,
-    header_form::HeaderForm,
     navigation::{CommandPage, PageType},
 };
 
-pub struct PagePlaylist {
-    header_form: HeaderForm,
-}
-
-impl Default for PagePlaylist {
-    fn default() -> Self {
-        Self {
-            header_form: HeaderForm::new("DAPのプレイリストを更新".to_string()),
-        }
-    }
-}
+#[derive(Default)]
+pub struct PagePlaylist;
 
 impl PagePlaylist {
     fn run_command(&self, console: &mut Console) {
@@ -35,7 +25,7 @@ impl CommandPage for PagePlaylist {
     fn show(&mut self, console: &mut Console, ui: &mut Ui) {
         ui.vertical_centered(|ui| {
             ui.add_space(10.0);
-            ui.label(&self.header_form.command_description);
+            ui.label("DAPのプレイリストを更新");
             ui.add_space(10.0);
 
             ui.label("プレイリストを更新します（入力不要）");
