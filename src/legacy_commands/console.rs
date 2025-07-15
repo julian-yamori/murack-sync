@@ -8,6 +8,15 @@ enum MessageType {
     Error,
 }
 
+impl MessageType {
+    pub fn color(&self) -> egui::Color32 {
+        match self {
+            MessageType::Log => egui::Color32::LIGHT_GRAY,
+            MessageType::Error => egui::Color32::LIGHT_RED,
+        }
+    }
+}
+
 #[derive(Clone)]
 struct Message {
     message_type: MessageType,
@@ -48,10 +57,7 @@ impl Console {
             .show(ui, |ui| {
                 ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
                     for message in &self.messages {
-                        let color = match message.message_type {
-                            MessageType::Log => egui::Color32::LIGHT_GRAY,
-                            MessageType::Error => egui::Color32::LIGHT_RED,
-                        };
+                        let color = message.message_type.color();
                         ui.colored_label(color, &message.text);
                     }
                 });
