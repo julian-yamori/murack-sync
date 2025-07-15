@@ -59,6 +59,7 @@ impl Console {
             .show(ui, |ui| {
                 egui::ScrollArea::vertical()
                     .stick_to_bottom(true)
+                    .auto_shrink([false, false])
                     .show(ui, |ui| {
                         for message in &self.messages {
                             let color = message.message_type.color();

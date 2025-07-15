@@ -40,9 +40,7 @@ impl LegacyCommandsApp {
             // Console area
             ui.label("Console:");
             ui.add_space(5.0);
-            ui.allocate_ui(ui.available_size(), |ui| {
-                self.console.show(ui);
-            });
+            self.console.show(ui);
         });
     }
 }
