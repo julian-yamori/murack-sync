@@ -318,8 +318,7 @@ impl eframe::App for MurackSyncApp {
                                         return;
                                     }
                                     self.console.add_log(format!(
-                                        "[INFO] move コマンドを実行: {} -> {}",
-                                        src_path, dest_path
+                                        "[INFO] move コマンドを実行: {src_path} -> {dest_path}"
                                     ));
                                     self.console
                                         .add_log("[INFO] move 処理が完了しました".to_string());
