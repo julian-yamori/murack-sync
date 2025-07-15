@@ -20,14 +20,14 @@ fn main() -> eframe::Result {
             // This gives us image support:
             egui_extras::install_image_loaders(&cc.egui_ctx);
 
-            setup_fonts(&cc.egui_ctx);
+            cc.egui_ctx.set_fonts(font_definitions());
 
             Ok(Box::<MurackSyncApp>::default())
         }),
     )
 }
 
-fn setup_fonts(ctx: &egui::Context) {
+fn font_definitions() -> egui::FontDefinitions {
     let mut fonts = egui::FontDefinitions::default();
 
     // Add Japanese font
@@ -49,8 +49,7 @@ fn setup_fonts(ctx: &egui::Context) {
         .or_default()
         .insert(0, "noto_sans_cjk".to_owned());
 
-    // Apply font settings
-    ctx.set_fonts(fonts);
+    fonts
 }
 
 #[derive(Default)]
