@@ -16,6 +16,7 @@ impl LegacyCommandsApp {
     pub fn show(&mut self, ui: &mut egui::Ui) {
         ui.vertical(|ui| {
             self.navigation.show_tab(ui);
+            let page = &mut *self.navigation.current_page;
 
             ui.separator();
 
@@ -23,7 +24,22 @@ impl LegacyCommandsApp {
             ui.allocate_ui_with_layout(
                 [ui.available_width(), 200.0].into(),
                 egui::Layout::top_down(egui::Align::Center),
-                |ui| self.navigation.current_page.show(&mut self.console, ui),
+                |ui| {
+                    ui.vertical_centered(|ui| {
+                        ui.add_space(10.0);
+                        ui.label(page.page_discription());
+                        ui.add_space(10.0);
+
+                        page.show_form(ui);
+
+                        ui.add_space(10.0);
+
+                        let button = ui.button("実行");
+                        if button.clicked() {
+                            page.run_command(&mut self.console);
+                        }
+                    });
+                },
             );
 
             ui.separator();

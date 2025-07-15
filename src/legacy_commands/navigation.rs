@@ -54,5 +54,9 @@ impl PageType {
 pub trait CommandPage {
     fn page_type(&self) -> PageType;
 
-    fn show(&mut self, console: &mut Console, ui: &mut egui::Ui);
+    fn page_discription(&self) -> &str;
+
+    fn show_form(&mut self, ui: &mut egui::Ui);
+
+    fn run_command(&mut self, console: &mut Console);
 }
