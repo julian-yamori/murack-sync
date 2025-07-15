@@ -42,7 +42,7 @@ pub enum PageType {
 }
 
 impl PageType {
-    pub fn build_default_page(&self) -> Box<dyn CommandPage> {
+    fn build_default_page(&self) -> Box<dyn CommandPage> {
         match self {
             PageType::Add => Box::new(PageAdd::default()),
             PageType::Playlist => Box::new(PagePlaylist {}),
