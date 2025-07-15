@@ -52,15 +52,19 @@ impl Console {
     }
 
     pub fn show(&mut self, ui: &mut egui::Ui) {
-        egui::ScrollArea::vertical()
-            .stick_to_bottom(true)
+        egui::Frame::new()
+            .fill(egui::Color32::from_rgb(34, 34, 34))
+            .stroke(egui::Stroke::new(1.0, egui::Color32::WHITE))
+            .inner_margin(egui::Margin::same(8))
             .show(ui, |ui| {
-                ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
-                    for message in &self.messages {
-                        let color = message.message_type.color();
-                        ui.colored_label(color, &message.text);
-                    }
-                });
+                egui::ScrollArea::vertical()
+                    .stick_to_bottom(true)
+                    .show(ui, |ui| {
+                        for message in &self.messages {
+                            let color = message.message_type.color();
+                            ui.colored_label(color, &message.text);
+                        }
+                    });
             });
     }
 }
