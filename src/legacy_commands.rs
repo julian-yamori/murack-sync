@@ -2,7 +2,7 @@ mod command_pages;
 mod console;
 mod navigation;
 
-use eframe::egui;
+use eframe::egui::{self, RichText};
 
 use crate::legacy_commands::{console::Console, navigation::LegacyCommandsNavigation};
 
@@ -21,18 +21,25 @@ impl LegacyCommandsApp {
             ui.separator();
 
             ui.vertical_centered(|ui| {
-                ui.add_space(10.0);
-                ui.label(page.page_discription());
+                ui.add_space(4.0);
+
+                // コマンドの簡易説明タイトル
+                ui.label(RichText::new(page.page_discription()).heading().strong());
+
                 ui.add_space(10.0);
 
+                // パラメータの入力欄
                 page.show_form(ui);
 
                 ui.add_space(10.0);
 
-                let button = ui.button("実行");
+                // 実行ボタン
+                let button = ui.button(RichText::new("実行").heading());
                 if button.clicked() {
                     page.run_command(&mut self.console);
                 }
+
+                ui.add_space(4.0);
             });
 
             ui.separator();

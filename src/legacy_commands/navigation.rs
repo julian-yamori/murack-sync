@@ -1,4 +1,4 @@
-use eframe::egui;
+use eframe::egui::{self, RichText};
 
 use crate::legacy_commands::{
     command_pages::{PageAdd, PageMove, PagePlaylist},
@@ -15,15 +15,23 @@ impl LegacyCommandsNavigation {
         let mut current_type = old_type;
 
         ui.horizontal(|ui| {
-            ui.selectable_value(&mut current_type, PageType::Add, "add");
-            ui.selectable_value(&mut current_type, PageType::Playlist, "playlist");
-            ui.selectable_value(&mut current_type, PageType::Move, "move");
+            ui.selectable_value(&mut current_type, PageType::Add, button_text("add"));
+            ui.selectable_value(
+                &mut current_type,
+                PageType::Playlist,
+                button_text("playlist"),
+            );
+            ui.selectable_value(&mut current_type, PageType::Move, button_text("move"));
         });
 
         if old_type != current_type {
             self.current_page = current_type.build_default_page();
         }
     }
+}
+
+fn button_text(text: &str) -> RichText {
+    RichText::new(text).heading()
 }
 
 impl Default for LegacyCommandsNavigation {
