@@ -5,9 +5,9 @@ use std::time::Duration;
 use eframe::egui::{Ui, mutex::Mutex};
 
 use crate::legacy_commands::{
+    command_pages::{CommandPage, PageType},
     console::Console,
     egui_cui::{ChoiceState, EguiCui, SimpleCui},
-    navigation::{CommandPage, PageType},
 };
 
 /// check コマンドのページ

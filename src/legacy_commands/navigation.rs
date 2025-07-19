@@ -1,10 +1,7 @@
-use std::sync::Arc;
+use eframe::egui::{self, RichText};
 
-use eframe::egui::{self, RichText, mutex::Mutex};
-
-use crate::legacy_commands::{
-    command_pages::{PageAdd, PageCheck, PageMove, PagePlaylist, PageRemove},
-    console::Console,
+use crate::legacy_commands::command_pages::{
+    CommandPage, PageAdd, PageCheck, PageMove, PagePlaylist, PageRemove, PageType,
 };
 
 pub struct LegacyCommandsNavigation {
@@ -29,7 +26,7 @@ impl LegacyCommandsNavigation {
         });
 
         if old_type != current_type {
-            self.current_page = current_type.build_default_page();
+            self.current_page = default_page_by_type(&current_type);
         }
     }
 }
@@ -46,33 +43,12 @@ impl Default for LegacyCommandsNavigation {
     }
 }
 
-#[derive(PartialEq, Clone, Copy)]
-pub enum PageType {
-    Add,
-    Playlist,
-    Move,
-    Remove,
-    Check,
-}
-
-impl PageType {
-    fn build_default_page(&self) -> Box<dyn CommandPage> {
-        match self {
-            PageType::Add => Box::new(PageAdd::default()),
-            PageType::Playlist => Box::new(PagePlaylist {}),
-            PageType::Move => Box::new(PageMove::default()),
-            PageType::Remove => Box::new(PageRemove::default()),
-            PageType::Check => Box::new(PageCheck::default()),
-        }
+pub fn default_page_by_type(page_type: &PageType) -> Box<dyn CommandPage> {
+    match page_type {
+        PageType::Add => Box::new(PageAdd::default()),
+        PageType::Playlist => Box::new(PagePlaylist {}),
+        PageType::Move => Box::new(PageMove::default()),
+        PageType::Remove => Box::new(PageRemove::default()),
+        PageType::Check => Box::new(PageCheck::default()),
     }
-}
-
-pub trait CommandPage {
-    fn page_type(&self) -> PageType;
-
-    fn page_discription(&self) -> &str;
-
-    fn show_form(&mut self, ui: &mut egui::Ui);
-
-    fn run_command(&mut self, console: Arc<Mutex<Console>>);
 }

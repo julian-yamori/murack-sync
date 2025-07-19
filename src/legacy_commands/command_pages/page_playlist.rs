@@ -3,8 +3,8 @@ use std::sync::Arc;
 use eframe::egui::{Ui, mutex::Mutex};
 
 use crate::legacy_commands::{
+    command_pages::{CommandPage, PageType},
     console::Console,
-    navigation::{CommandPage, PageType},
 };
 
 /// playlist コマンドのページ
