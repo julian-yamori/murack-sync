@@ -1,7 +1,7 @@
 use eframe::egui::{self, RichText};
 
 use crate::legacy_commands::{
-    command_pages::{PageAdd, PageMove, PagePlaylist},
+    command_pages::{PageAdd, PageMove, PagePlaylist, PageRemove},
     console::Console,
 };
 
@@ -22,6 +22,7 @@ impl LegacyCommandsNavigation {
                 button_text("playlist"),
             );
             ui.selectable_value(&mut current_type, PageType::Move, button_text("move"));
+            ui.selectable_value(&mut current_type, PageType::Remove, button_text("remove"));
         });
 
         if old_type != current_type {
@@ -47,6 +48,7 @@ pub enum PageType {
     Add,
     Playlist,
     Move,
+    Remove,
 }
 
 impl PageType {
@@ -55,6 +57,7 @@ impl PageType {
             PageType::Add => Box::new(PageAdd::default()),
             PageType::Playlist => Box::new(PagePlaylist {}),
             PageType::Move => Box::new(PageMove::default()),
+            PageType::Remove => Box::new(PageRemove::default()),
         }
     }
 }
