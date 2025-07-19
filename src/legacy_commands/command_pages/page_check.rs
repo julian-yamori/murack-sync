@@ -64,7 +64,7 @@ impl CommandPage for PageCheck {
                             '2' => "2: DBからPCへ上書き",
                             '0' => "0: 解決せずに次へ",
                             '-' => "-: 解決処理を中止",
-                            _ => &format!("{}: その他", choice),
+                            _ => &format!("{choice}: その他"),
                         };
 
                         if ui.button(button_text).clicked() {
@@ -100,7 +100,7 @@ impl CommandPage for PageCheck {
 
         thread::spawn(move || {
             if let Err(e) = run_check_prototype(path, ignore_dap, egui_cui) {
-                console_clone.add_error(format!("[ERROR] check 処理でエラーが発生しました: {}", e));
+                console_clone.add_error(format!("[ERROR] check 処理でエラーが発生しました: {e}"));
             }
             is_running = false;
         });
@@ -119,7 +119,7 @@ fn run_check_prototype(path: String, ignore_dap: bool, cui: EguiCui) -> anyhow::
             &path
         }
     ));
-    cui.out_log(&format!("DAPファイル内容無視: {}", ignore_dap));
+    cui.out_log(&format!("DAPファイル内容無視: {ignore_dap}"));
     cui.out_log("====================");
 
     // ファイルリストアップのシミュレーション
