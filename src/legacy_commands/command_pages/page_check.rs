@@ -7,7 +7,7 @@ use eframe::egui::{Ui, mutex::Mutex};
 use crate::legacy_commands::{
     command_pages::{CommandPage, PageType},
     console::Console,
-    egui_cui::{ChoiceState, EguiCui, SimpleCui},
+    egui_cui::{CommandState, EguiCui, SimpleCui},
 };
 
 /// check コマンドのページ
@@ -15,8 +15,7 @@ use crate::legacy_commands::{
 pub struct PageCheck {
     target_path: String,
     ignore_dap_content: bool,
-    choice_state: Arc<Mutex<Option<ChoiceState>>>,
-    is_running: Arc<Mutex<bool>>,
+    command_state: Arc<Mutex<CommandState>>,
 }
 
 impl CommandPage for PageCheck {
@@ -39,12 +38,17 @@ impl CommandPage for PageCheck {
         });
 
         // 選択肢が待機中なら表示
-        if let Some(state) = &*self.choice_state.lock() {
+        if let CommandState::Choice {
+            available_choices,
+            message,
+            choice_sender,
+        } = &*self.command_state.lock()
+        {
             ui.separator();
-            ui.label(&state.message);
+            ui.label(message);
 
             ui.horizontal(|ui| {
-                for &choice in &state.available_choices {
+                for &choice in available_choices {
                     let button_text = match choice {
                         '1' => "1: PCからDBへ上書き",
                         '2' => "2: DBからPCへ上書き",
@@ -54,7 +58,7 @@ impl CommandPage for PageCheck {
                     };
 
                     if ui.button(button_text).clicked() {
-                        if let Err(e) = state.choice_sender.send(choice) {
+                        if let Err(e) = choice_sender.send(choice) {
                             println!("{e}");
                         }
                     }
@@ -65,27 +69,26 @@ impl CommandPage for PageCheck {
 
     fn run_command(&mut self, console: Arc<Mutex<Console>>) {
         {
-            let mut is_running = self.is_running.lock();
-            if *is_running {
+            let mut command_state = self.command_state.lock();
+            if !matches!(&*command_state, CommandState::NotRunning) {
                 console
                     .lock()
                     .add_error("[ERROR] check コマンドは既に実行中です".to_owned());
                 return;
             }
 
-            *is_running = true;
+            *command_state = CommandState::Running;
         }
 
         // EguiCui を作成
-        let egui_cui = EguiCui::new(console.clone());
-        self.choice_state = egui_cui.choice_state();
+        let egui_cui = EguiCui::new(console.clone(), self.command_state.clone());
 
         // プロトタイプ処理を非同期で実行
         let path = self.target_path.clone();
         let ignore_dap = self.ignore_dap_content;
         let console_clone = console.clone();
 
-        let is_running_clone = self.is_running.clone();
+        let command_state_clone = self.command_state.clone();
 
         thread::spawn(move || {
             if let Err(e) = run_check_prototype(path, ignore_dap, egui_cui) {
@@ -93,7 +96,7 @@ impl CommandPage for PageCheck {
                     .lock()
                     .add_error(format!("[ERROR] check 処理でエラーが発生しました: {e}"));
             }
-            *is_running_clone.lock() = false;
+            *command_state_clone.lock() = CommandState::NotRunning;
         });
     }
 }

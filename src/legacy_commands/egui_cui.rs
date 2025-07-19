@@ -6,12 +6,17 @@ use eframe::egui::mutex::Mutex;
 
 use crate::legacy_commands::console::Console;
 
-/// 選択肢の状態管理
-#[derive(Debug)]
-pub struct ChoiceState {
-    pub available_choices: Vec<char>,
-    pub message: String,
-    pub choice_sender: Sender<char>,
+/// コマンドの実行状態
+#[derive(Debug, Default)]
+pub enum CommandState {
+    #[default]
+    NotRunning,
+    Running,
+    Choice {
+        available_choices: Vec<char>,
+        message: String,
+        choice_sender: Sender<char>,
+    },
 }
 
 /// シンプルな Cui トレイト (プロトタイプ用)
@@ -24,19 +29,15 @@ pub trait SimpleCui {
 /// egui 用の Cui 実装
 pub struct EguiCui {
     console: Arc<Mutex<Console>>,
-    choice_state: Arc<Mutex<Option<ChoiceState>>>,
+    command_state: Arc<Mutex<CommandState>>,
 }
 
 impl EguiCui {
-    pub fn new(console: Arc<Mutex<Console>>) -> Self {
+    pub fn new(console: Arc<Mutex<Console>>, command_state: Arc<Mutex<CommandState>>) -> Self {
         Self {
             console,
-            choice_state: Arc::new(Mutex::new(None)),
+            command_state,
         }
-    }
-
-    pub fn choice_state(&self) -> Arc<Mutex<Option<ChoiceState>>> {
-        self.choice_state.clone()
     }
 }
 
@@ -53,17 +54,17 @@ impl SimpleCui for EguiCui {
         let (choice_sender, choice_receiver) = mpsc::channel();
 
         // 選択肢状態を設定
-        *self.choice_state.lock() = Some(ChoiceState {
+        *self.command_state.lock() = CommandState::Choice {
             available_choices: cases.to_vec(),
             message: message.to_string(),
             choice_sender,
-        });
+        };
 
         // 選択されるまで待機
         let choice = choice_receiver.recv()?;
 
         // UI に選択終了を通知
-        *self.choice_state.lock() = None;
+        *self.command_state.lock() = CommandState::Running;
 
         Ok(choice)
     }
