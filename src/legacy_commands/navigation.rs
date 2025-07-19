@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use eframe::egui::{self, RichText};
 
 use crate::legacy_commands::{
@@ -72,5 +74,5 @@ pub trait CommandPage {
 
     fn show_form(&mut self, ui: &mut egui::Ui);
 
-    fn run_command(&mut self, console: &Console);
+    fn run_command(&mut self, console: Arc<Mutex<Console>>);
 }

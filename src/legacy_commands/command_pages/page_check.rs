@@ -11,25 +11,12 @@ use crate::legacy_commands::{
 };
 
 /// check コマンドのページ
+#[derive(Default)]
 pub struct PageCheck {
     target_path: String,
     ignore_dap_content: bool,
-    egui_cui: Option<EguiCui>,
-    choice_state: Arc<Mutex<ChoiceState>>,
-    is_running: bool,
-}
-
-impl Default for PageCheck {
-    fn default() -> Self {
-        let choice_state = Arc::new(Mutex::new(ChoiceState::default()));
-        Self {
-            target_path: String::new(),
-            ignore_dap_content: false,
-            egui_cui: None,
-            choice_state,
-            is_running: false,
-        }
-    }
+    choice_state: Arc<Mutex<Option<ChoiceState>>>,
+    is_running: Arc<Mutex<bool>>,
 }
 
 impl CommandPage for PageCheck {
@@ -52,8 +39,8 @@ impl CommandPage for PageCheck {
         });
 
         // 選択肢が待機中なら表示
-        if let Ok(state) = self.choice_state.try_lock() {
-            if state.waiting_for_input {
+        if let Ok(state) = self.choice_state.lock() {
+            if let Some(state) = &*state {
                 ui.separator();
                 ui.label(&state.message);
 
@@ -68,8 +55,8 @@ impl CommandPage for PageCheck {
                         };
 
                         if ui.button(button_text).clicked() {
-                            if let Some(ref egui_cui) = self.egui_cui {
-                                egui_cui.set_choice(choice);
+                            if let Err(e) = state.choice_sender.send(choice) {
+                                println!("{e}");
                             }
                         }
                     }
@@ -78,31 +65,35 @@ impl CommandPage for PageCheck {
         }
     }
 
-    fn run_command(&mut self, console: &Console) {
-        if self.is_running {
-            console.add_error("[ERROR] check コマンドは既に実行中です".to_owned());
+    fn run_command(&mut self, console: Arc<Mutex<Console>>) {
+        let mut is_running = self.is_running.lock().unwrap();
+        if *is_running {
+            if let Ok(mut console) = console.lock() {
+                console.add_error("[ERROR] check コマンドは既に実行中です".to_owned());
+            }
             return;
         }
 
-        self.is_running = true;
+        *is_running = true;
 
         // EguiCui を作成
         let egui_cui = EguiCui::new(console.clone());
         self.choice_state = egui_cui.choice_state();
-        self.egui_cui = Some(egui_cui);
 
         // プロトタイプ処理を非同期で実行
         let path = self.target_path.clone();
         let ignore_dap = self.ignore_dap_content;
-        let egui_cui = self.egui_cui.as_ref().unwrap().clone();
         let console_clone = console.clone();
-        let mut is_running = self.is_running;
+
+        let is_running_clone = self.is_running.clone();
 
         thread::spawn(move || {
             if let Err(e) = run_check_prototype(path, ignore_dap, egui_cui) {
-                console_clone.add_error(format!("[ERROR] check 処理でエラーが発生しました: {e}"));
+                if let Ok(mut console) = console_clone.lock() {
+                    console.add_error(format!("[ERROR] check 処理でエラーが発生しました: {e}"));
+                }
             }
-            is_running = false;
+            *is_running_clone.lock().unwrap() = false;
         });
     }
 }
@@ -140,9 +131,9 @@ fn run_check_prototype(path: String, ignore_dap: bool, cui: EguiCui) -> anyhow::
     // 問題検出のシミュレーション
     cui.out_log("");
     cui.out_log("# music/album1/song1.flac");
-    cui.out_log("---- DAPに存在しません");
+    cui.out_error("---- DAPに存在しません");
     cui.out_log("# music/album2/song2.flac");
-    cui.out_log("---- PCとDBで再生時間が異なります");
+    cui.out_error("---- PCとDBで再生時間が異なります");
     cui.out_log("");
 
     cui.out_log("2個のファイルで問題を検出しました。");

@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use eframe::egui::Ui;
 
 use crate::legacy_commands::{
@@ -20,10 +22,12 @@ impl CommandPage for PagePlaylist {
 
     fn show_form(&mut self, _ui: &mut Ui) {}
 
-    fn run_command(&mut self, console: &Console) {
+    fn run_command(&mut self, console: Arc<Mutex<Console>>) {
         // TODO: 実際のplaylist処理を実装
 
-        console.add_log("[INFO] playlist コマンドを実行".to_string());
-        console.add_log("[INFO] playlist 処理が完了しました".to_string());
+        if let Ok(mut console) = console.lock() {
+            console.add_log("[INFO] playlist コマンドを実行".to_string());
+            console.add_log("[INFO] playlist 処理が完了しました".to_string());
+        }
     }
 }

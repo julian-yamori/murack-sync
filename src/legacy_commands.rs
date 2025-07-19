@@ -2,13 +2,15 @@ mod command_pages;
 mod console;
 mod navigation;
 
+use std::sync::{Arc, Mutex};
+
 use eframe::egui::{self, RichText};
 
 use crate::legacy_commands::{console::Console, navigation::LegacyCommandsNavigation};
 
 #[derive(Default)]
 pub struct LegacyCommandsApp {
-    console: Console,
+    console: Arc<Mutex<Console>>,
     navigation: LegacyCommandsNavigation,
 }
 
@@ -36,7 +38,7 @@ impl LegacyCommandsApp {
                 // 実行ボタン
                 let button = ui.button(RichText::new("実行").heading());
                 if button.clicked() {
-                    page.run_command(&self.console);
+                    page.run_command(self.console.clone());
                 }
 
                 ui.add_space(4.0);
@@ -47,7 +49,12 @@ impl LegacyCommandsApp {
             // Console area
             ui.label("Console:");
             ui.add_space(5.0);
-            self.console.show(ui);
+            match self.console.lock() {
+                Ok(console) => console.show(ui),
+                Err(_) => {
+                    ui.label("Failed to lock console.");
+                }
+            };
         });
     }
 }

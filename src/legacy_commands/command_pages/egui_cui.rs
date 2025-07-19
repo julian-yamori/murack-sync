@@ -1,6 +1,5 @@
+use std::sync::mpsc::{self, Sender};
 use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::Duration;
 
 use anyhow::Result;
 
@@ -10,20 +9,8 @@ use crate::legacy_commands::console::Console;
 #[derive(Debug)]
 pub struct ChoiceState {
     pub available_choices: Vec<char>,
-    pub selected_choice: Option<char>,
-    pub waiting_for_input: bool,
     pub message: String,
-}
-
-impl Default for ChoiceState {
-    fn default() -> Self {
-        Self {
-            available_choices: Vec::new(),
-            selected_choice: None,
-            waiting_for_input: false,
-            message: String::new(),
-        }
-    }
+    pub choice_sender: Sender<char>,
 }
 
 /// シンプルな Cui トレイト (プロトタイプ用)
@@ -34,67 +21,57 @@ pub trait SimpleCui {
 }
 
 /// egui 用の Cui 実装
-#[derive(Clone)]
 pub struct EguiCui {
-    console: Console,
-    choice_state: Arc<Mutex<ChoiceState>>,
+    console: Arc<Mutex<Console>>,
+    choice_state: Arc<Mutex<Option<ChoiceState>>>,
 }
 
 impl EguiCui {
-    pub fn new(console: Console) -> Self {
+    pub fn new(console: Arc<Mutex<Console>>) -> Self {
+        let choice_state = Arc::new(Mutex::new(None));
+
         Self {
             console,
-            choice_state: Arc::new(Mutex::new(ChoiceState::default())),
+            choice_state: choice_state.clone(),
         }
     }
 
-    /// 選択肢状態への参照を取得
-    pub fn choice_state(&self) -> Arc<Mutex<ChoiceState>> {
-        Arc::clone(&self.choice_state)
-    }
-
-    /// 選択肢を設定
-    pub fn set_choice(&self, choice: char) {
-        if let Ok(mut state) = self.choice_state.lock() {
-            state.selected_choice = Some(choice);
-        }
+    pub fn choice_state(&self) -> Arc<Mutex<Option<ChoiceState>>> {
+        self.choice_state.clone()
     }
 }
 
 impl SimpleCui for EguiCui {
     fn out_log(&self, message: &str) {
-        self.console.add_log(message.to_string());
+        match self.console.lock() {
+            Ok(mut console) => console.add_log(message.to_string()),
+            Err(_) => println!("EguiCui : Failed to show log : {message}"),
+        }
     }
 
     fn out_error(&self, message: &str) {
-        self.console.add_error(message.to_string());
+        match self.console.lock() {
+            Ok(mut console) => console.add_error(message.to_string()),
+            Err(_) => println!("EguiCui : Failed to show ERROR : {message}"),
+        }
     }
 
     fn input_case(&self, cases: &[char], message: &str) -> Result<char> {
+        let (choice_sender, choice_receiver) = mpsc::channel();
+
         // 選択肢状態を設定
-        {
-            let mut state = self.choice_state.lock().unwrap();
-            state.available_choices = cases.to_vec();
-            state.selected_choice = None;
-            state.waiting_for_input = true;
-            state.message = message.to_string();
-        }
+        *self.choice_state.lock().unwrap() = Some(ChoiceState {
+            available_choices: cases.to_vec(),
+            message: message.to_string(),
+            choice_sender,
+        });
 
         // 選択されるまで待機
-        loop {
-            {
-                let state = self.choice_state.lock().unwrap();
-                if let Some(choice) = state.selected_choice {
-                    // 選択肢をリセット
-                    drop(state);
-                    let mut state = self.choice_state.lock().unwrap();
-                    state.waiting_for_input = false;
-                    return Ok(choice);
-                }
-            }
+        let choice = choice_receiver.recv()?;
 
-            // 短時間スリープして CPU 使用率を下げる
-            thread::sleep(Duration::from_millis(50));
-        }
+        // UI に選択終了を通知
+        *self.choice_state.lock().unwrap() = None;
+
+        Ok(choice)
     }
 }

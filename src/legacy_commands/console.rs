@@ -1,5 +1,4 @@
 use std::collections::VecDeque;
-use std::sync::{Arc, Mutex};
 
 use eframe::egui::{self};
 
@@ -24,50 +23,31 @@ struct Message {
     text: String,
 }
 
+#[derive(Default)]
 pub struct Console {
-    messages: Arc<Mutex<VecDeque<Message>>>,
-}
-
-impl Default for Console {
-    fn default() -> Self {
-        Self {
-            messages: Arc::new(Mutex::new(VecDeque::new())),
-        }
-    }
-}
-
-impl Clone for Console {
-    fn clone(&self) -> Self {
-        Self {
-            messages: Arc::clone(&self.messages),
-        }
-    }
+    messages: VecDeque<Message>,
 }
 
 impl Console {
-    pub fn add_log(&self, text: String) {
-        if let Ok(mut messages) = self.messages.lock() {
-            messages.push_back(Message {
-                message_type: MessageType::Log,
-                text,
-            });
-            // Keep only last 1000 messages
-            if messages.len() > 1000 {
-                messages.pop_front();
-            }
+    pub fn add_log(&mut self, text: String) {
+        self.messages.push_back(Message {
+            message_type: MessageType::Log,
+            text,
+        });
+        // Keep only last 1000 messages
+        if self.messages.len() > 1000 {
+            self.messages.pop_front();
         }
     }
 
-    pub fn add_error(&self, text: String) {
-        if let Ok(mut messages) = self.messages.lock() {
-            messages.push_back(Message {
-                message_type: MessageType::Error,
-                text,
-            });
-            // Keep only last 1000 messages
-            if messages.len() > 1000 {
-                messages.pop_front();
-            }
+    pub fn add_error(&mut self, text: String) {
+        self.messages.push_back(Message {
+            message_type: MessageType::Error,
+            text,
+        });
+        // Keep only last 1000 messages
+        if self.messages.len() > 1000 {
+            self.messages.pop_front();
         }
     }
 
@@ -81,11 +61,9 @@ impl Console {
                     .stick_to_bottom(true)
                     .auto_shrink([false, false])
                     .show(ui, |ui| {
-                        if let Ok(messages) = self.messages.lock() {
-                            for message in messages.iter() {
-                                let color = message.message_type.color();
-                                ui.colored_label(color, &message.text);
-                            }
+                        for message in self.messages.iter() {
+                            let color = message.message_type.color();
+                            ui.colored_label(color, &message.text);
                         }
                     });
             });
