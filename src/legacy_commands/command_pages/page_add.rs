@@ -27,7 +27,7 @@ impl CommandPage for PageAdd {
         });
     }
 
-    fn run_command(&mut self, console: &mut Console) {
+    fn run_command(&mut self, console: &Console) {
         // TODO: 実際のadd処理を実装
 
         let path = &self.songs_path;

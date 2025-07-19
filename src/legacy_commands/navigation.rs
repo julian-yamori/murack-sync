@@ -69,5 +69,5 @@ pub trait CommandPage {
 
     fn show_form(&mut self, ui: &mut egui::Ui);
 
-    fn run_command(&mut self, console: &mut Console);
+    fn run_command(&mut self, console: &Console);
 }

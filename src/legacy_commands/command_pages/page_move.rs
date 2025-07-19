@@ -33,7 +33,7 @@ impl CommandPage for PageMove {
         });
     }
 
-    fn run_command(&mut self, console: &mut Console) {
+    fn run_command(&mut self, console: &Console) {
         // TODO: 実際のmove処理を実装
 
         let src_path = &self.src_path;

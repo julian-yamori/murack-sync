@@ -20,7 +20,7 @@ impl CommandPage for PagePlaylist {
 
     fn show_form(&mut self, _ui: &mut Ui) {}
 
-    fn run_command(&mut self, console: &mut Console) {
+    fn run_command(&mut self, console: &Console) {
         // TODO: 実際のplaylist処理を実装
 
         console.add_log("[INFO] playlist コマンドを実行".to_string());

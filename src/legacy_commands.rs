@@ -36,7 +36,7 @@ impl LegacyCommandsApp {
                 // 実行ボタン
                 let button = ui.button(RichText::new("実行").heading());
                 if button.clicked() {
-                    page.run_command(&mut self.console);
+                    page.run_command(&self.console);
                 }
 
                 ui.add_space(4.0);

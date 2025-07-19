@@ -27,7 +27,7 @@ impl CommandPage for PageRemove {
         });
     }
 
-    fn run_command(&mut self, console: &mut Console) {
+    fn run_command(&mut self, console: &Console) {
         // TODO: 実際のremove処理を実装
 
         let path = &self.target_path;
