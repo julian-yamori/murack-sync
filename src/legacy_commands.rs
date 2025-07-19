@@ -1,5 +1,6 @@
 mod command_pages;
 mod console;
+mod egui_cui;
 mod navigation;
 
 use std::sync::Arc;

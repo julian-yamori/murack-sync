@@ -2,11 +2,11 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use eframe::egui::{mutex::Mutex, Ui};
+use eframe::egui::{Ui, mutex::Mutex};
 
 use crate::legacy_commands::{
-    command_pages::{ChoiceState, EguiCui, SimpleCui},
     console::Console,
+    egui_cui::{ChoiceState, EguiCui, SimpleCui},
     navigation::{CommandPage, PageType},
 };
 
