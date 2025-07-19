@@ -5,6 +5,7 @@ use eframe::egui::{Ui, mutex::Mutex};
 use crate::legacy_commands::{
     command_pages::{CommandPage, PageType},
     console::Console,
+    egui_cui::CommandState,
 };
 
 /// playlist コマンドのページ
@@ -22,7 +23,11 @@ impl CommandPage for PagePlaylist {
 
     fn show_form(&mut self, _ui: &mut Ui) {}
 
-    fn run_command(&mut self, console: Arc<Mutex<Console>>) {
+    fn run_command(
+        &mut self,
+        console: Arc<Mutex<Console>>,
+        _command_state: Arc<Mutex<CommandState>>,
+    ) {
         // TODO: 実際のplaylist処理を実装
 
         let mut console = console.lock();

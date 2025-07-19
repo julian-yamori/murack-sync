@@ -5,6 +5,7 @@ use eframe::egui::{Ui, mutex::Mutex};
 use crate::legacy_commands::{
     command_pages::{CommandPage, PageType},
     console::Console,
+    egui_cui::CommandState,
 };
 
 /// move コマンドのページ
@@ -35,7 +36,11 @@ impl CommandPage for PageMove {
         });
     }
 
-    fn run_command(&mut self, console: Arc<Mutex<Console>>) {
+    fn run_command(
+        &mut self,
+        console: Arc<Mutex<Console>>,
+        _command_state: Arc<Mutex<CommandState>>,
+    ) {
         // TODO: 実際のmove処理を実装
 
         let mut console = console.lock();

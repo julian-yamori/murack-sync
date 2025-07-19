@@ -9,11 +9,15 @@ pub struct LegacyCommandsNavigation {
 }
 
 impl LegacyCommandsNavigation {
-    pub fn show_tab(&mut self, ui: &mut egui::Ui) {
+    pub fn show_tab(&mut self, ui: &mut egui::Ui, enabled: bool) {
         let old_type = self.current_page.page_type();
         let mut current_type = old_type;
 
         ui.horizontal(|ui| {
+            if !enabled {
+                ui.disable();
+            }
+
             ui.selectable_value(&mut current_type, PageType::Add, button_text("add"));
             ui.selectable_value(
                 &mut current_type,

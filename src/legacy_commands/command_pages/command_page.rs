@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use eframe::egui::{self, mutex::Mutex};
 
-use crate::legacy_commands::console::Console;
+use crate::legacy_commands::{console::Console, egui_cui::CommandState};
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum PageType {
@@ -21,5 +21,9 @@ pub trait CommandPage {
 
     fn show_form(&mut self, ui: &mut egui::Ui);
 
-    fn run_command(&mut self, console: Arc<Mutex<Console>>);
+    fn run_command(
+        &mut self,
+        console: Arc<Mutex<Console>>,
+        command_state: Arc<Mutex<CommandState>>,
+    );
 }

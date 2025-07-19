@@ -15,7 +15,6 @@ use crate::legacy_commands::{
 pub struct PageCheck {
     target_path: String,
     ignore_dap_content: bool,
-    command_state: Arc<Mutex<CommandState>>,
 }
 
 impl CommandPage for PageCheck {
@@ -36,59 +35,24 @@ impl CommandPage for PageCheck {
         ui.horizontal(|ui| {
             ui.checkbox(&mut self.ignore_dap_content, "DAPファイル内容を無視 (-i)");
         });
-
-        // 選択肢が待機中なら表示
-        if let CommandState::Choice {
-            available_choices,
-            message,
-            choice_sender,
-        } = &*self.command_state.lock()
-        {
-            ui.separator();
-            ui.label(message);
-
-            ui.horizontal(|ui| {
-                for &choice in available_choices {
-                    let button_text = match choice {
-                        '1' => "1: PCからDBへ上書き",
-                        '2' => "2: DBからPCへ上書き",
-                        '0' => "0: 解決せずに次へ",
-                        '-' => "-: 解決処理を中止",
-                        _ => &format!("{choice}: その他"),
-                    };
-
-                    if ui.button(button_text).clicked() {
-                        if let Err(e) = choice_sender.send(choice) {
-                            println!("{e}");
-                        }
-                    }
-                }
-            });
-        }
     }
 
-    fn run_command(&mut self, console: Arc<Mutex<Console>>) {
-        {
-            let mut command_state = self.command_state.lock();
-            if !matches!(&*command_state, CommandState::NotRunning) {
-                console
-                    .lock()
-                    .add_error("[ERROR] check コマンドは既に実行中です".to_owned());
-                return;
-            }
-
-            *command_state = CommandState::Running;
-        }
+    fn run_command(
+        &mut self,
+        console: Arc<Mutex<Console>>,
+        command_state: Arc<Mutex<CommandState>>,
+    ) {
+        *command_state.lock() = CommandState::Running;
 
         // EguiCui を作成
-        let egui_cui = EguiCui::new(console.clone(), self.command_state.clone());
+        let egui_cui = EguiCui::new(console.clone(), command_state.clone());
 
         // プロトタイプ処理を非同期で実行
         let path = self.target_path.clone();
         let ignore_dap = self.ignore_dap_content;
         let console_clone = console.clone();
 
-        let command_state_clone = self.command_state.clone();
+        let command_state_clone = command_state.clone();
 
         thread::spawn(move || {
             if let Err(e) = run_check_prototype(path, ignore_dap, egui_cui) {
