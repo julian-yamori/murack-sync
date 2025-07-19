@@ -18,3 +18,8 @@ env_logger = { version = "0.10", default-features = false, features = [
     "auto-color",
     "humantime",
 ] }
+
+# murack-core dependencies
+# walk_base_2_app = { path = "../murack-core/app" }  # temporarily disabled due to build issues
+anyhow = "1.0"
+tokio = { version = "1.0", features = ["full"] }
