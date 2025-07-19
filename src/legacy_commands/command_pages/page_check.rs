@@ -1,8 +1,8 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
-use eframe::egui::Ui;
+use eframe::egui::{mutex::Mutex, Ui};
 
 use crate::legacy_commands::{
     command_pages::{ChoiceState, EguiCui, SimpleCui},
@@ -39,42 +39,42 @@ impl CommandPage for PageCheck {
         });
 
         // 選択肢が待機中なら表示
-        if let Ok(state) = self.choice_state.lock() {
-            if let Some(state) = &*state {
-                ui.separator();
-                ui.label(&state.message);
+        if let Some(state) = &*self.choice_state.lock() {
+            ui.separator();
+            ui.label(&state.message);
 
-                ui.horizontal(|ui| {
-                    for &choice in &state.available_choices {
-                        let button_text = match choice {
-                            '1' => "1: PCからDBへ上書き",
-                            '2' => "2: DBからPCへ上書き",
-                            '0' => "0: 解決せずに次へ",
-                            '-' => "-: 解決処理を中止",
-                            _ => &format!("{choice}: その他"),
-                        };
+            ui.horizontal(|ui| {
+                for &choice in &state.available_choices {
+                    let button_text = match choice {
+                        '1' => "1: PCからDBへ上書き",
+                        '2' => "2: DBからPCへ上書き",
+                        '0' => "0: 解決せずに次へ",
+                        '-' => "-: 解決処理を中止",
+                        _ => &format!("{choice}: その他"),
+                    };
 
-                        if ui.button(button_text).clicked() {
-                            if let Err(e) = state.choice_sender.send(choice) {
-                                println!("{e}");
-                            }
+                    if ui.button(button_text).clicked() {
+                        if let Err(e) = state.choice_sender.send(choice) {
+                            println!("{e}");
                         }
                     }
-                });
-            }
+                }
+            });
         }
     }
 
     fn run_command(&mut self, console: Arc<Mutex<Console>>) {
-        let mut is_running = self.is_running.lock().unwrap();
-        if *is_running {
-            if let Ok(mut console) = console.lock() {
-                console.add_error("[ERROR] check コマンドは既に実行中です".to_owned());
+        {
+            let mut is_running = self.is_running.lock();
+            if *is_running {
+                console
+                    .lock()
+                    .add_error("[ERROR] check コマンドは既に実行中です".to_owned());
+                return;
             }
-            return;
-        }
 
-        *is_running = true;
+            *is_running = true;
+        }
 
         // EguiCui を作成
         let egui_cui = EguiCui::new(console.clone());
@@ -89,11 +89,11 @@ impl CommandPage for PageCheck {
 
         thread::spawn(move || {
             if let Err(e) = run_check_prototype(path, ignore_dap, egui_cui) {
-                if let Ok(mut console) = console_clone.lock() {
-                    console.add_error(format!("[ERROR] check 処理でエラーが発生しました: {e}"));
-                }
+                console_clone
+                    .lock()
+                    .add_error(format!("[ERROR] check 処理でエラーが発生しました: {e}"));
             }
-            *is_running_clone.lock().unwrap() = false;
+            *is_running_clone.lock() = false;
         });
     }
 }

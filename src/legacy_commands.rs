@@ -2,9 +2,9 @@ mod command_pages;
 mod console;
 mod navigation;
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-use eframe::egui::{self, RichText};
+use eframe::egui::{self, RichText, mutex::Mutex};
 
 use crate::legacy_commands::{console::Console, navigation::LegacyCommandsNavigation};
 
@@ -49,12 +49,7 @@ impl LegacyCommandsApp {
             // Console area
             ui.label("Console:");
             ui.add_space(5.0);
-            match self.console.lock() {
-                Ok(console) => console.show(ui),
-                Err(_) => {
-                    ui.label("Failed to lock console.");
-                }
-            };
+            self.console.lock().show(ui);
         });
     }
 }

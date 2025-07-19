@@ -1,6 +1,6 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-use eframe::egui::Ui;
+use eframe::egui::{Ui, mutex::Mutex};
 
 use crate::legacy_commands::{
     console::Console,
@@ -32,14 +32,14 @@ impl CommandPage for PageAdd {
     fn run_command(&mut self, console: Arc<Mutex<Console>>) {
         // TODO: 実際のadd処理を実装
 
-        if let Ok(mut console) = console.lock() {
-            let path = &self.songs_path;
-            if path.is_empty() {
-                console.add_error("[ERROR] 追加する曲のパスが未入力です".to_owned());
-                return;
-            }
-            console.add_log(format!("[INFO] add コマンドを実行: {path}"));
-            console.add_log("[INFO] add 処理が完了しました".to_string());
+        let mut console = console.lock();
+
+        let path = &self.songs_path;
+        if path.is_empty() {
+            console.add_error("[ERROR] 追加する曲のパスが未入力です".to_owned());
+            return;
         }
+        console.add_log(format!("[INFO] add コマンドを実行: {path}"));
+        console.add_log("[INFO] add 処理が完了しました".to_string());
     }
 }

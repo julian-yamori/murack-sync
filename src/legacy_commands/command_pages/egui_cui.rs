@@ -1,7 +1,8 @@
+use std::sync::Arc;
 use std::sync::mpsc::{self, Sender};
-use std::sync::{Arc, Mutex};
 
 use anyhow::Result;
+use eframe::egui::mutex::Mutex;
 
 use crate::legacy_commands::console::Console;
 
@@ -28,11 +29,9 @@ pub struct EguiCui {
 
 impl EguiCui {
     pub fn new(console: Arc<Mutex<Console>>) -> Self {
-        let choice_state = Arc::new(Mutex::new(None));
-
         Self {
             console,
-            choice_state: choice_state.clone(),
+            choice_state: Arc::new(Mutex::new(None)),
         }
     }
 
@@ -43,24 +42,18 @@ impl EguiCui {
 
 impl SimpleCui for EguiCui {
     fn out_log(&self, message: &str) {
-        match self.console.lock() {
-            Ok(mut console) => console.add_log(message.to_string()),
-            Err(_) => println!("EguiCui : Failed to show log : {message}"),
-        }
+        self.console.lock().add_log(message.to_string());
     }
 
     fn out_error(&self, message: &str) {
-        match self.console.lock() {
-            Ok(mut console) => console.add_error(message.to_string()),
-            Err(_) => println!("EguiCui : Failed to show ERROR : {message}"),
-        }
+        self.console.lock().add_error(message.to_string());
     }
 
     fn input_case(&self, cases: &[char], message: &str) -> Result<char> {
         let (choice_sender, choice_receiver) = mpsc::channel();
 
         // 選択肢状態を設定
-        *self.choice_state.lock().unwrap() = Some(ChoiceState {
+        *self.choice_state.lock() = Some(ChoiceState {
             available_choices: cases.to_vec(),
             message: message.to_string(),
             choice_sender,
@@ -70,7 +63,7 @@ impl SimpleCui for EguiCui {
         let choice = choice_receiver.recv()?;
 
         // UI に選択終了を通知
-        *self.choice_state.lock().unwrap() = None;
+        *self.choice_state.lock() = None;
 
         Ok(choice)
     }

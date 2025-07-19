@@ -1,6 +1,6 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-use eframe::egui::{self, RichText};
+use eframe::egui::{self, RichText, mutex::Mutex};
 
 use crate::legacy_commands::{
     command_pages::{PageAdd, PageCheck, PageMove, PagePlaylist, PageRemove},
