@@ -1,19 +1,37 @@
 use std::sync::Arc;
 
 use eframe::egui::{self, RichText, mutex::Mutex};
+use murack_core_app::Config;
+use sqlx::PgPool;
 
 use crate::legacy_commands::{
-    console::Console, egui_cui::CommandState, navigation::LegacyCommandsNavigation,
+    console::Console, di_registry::DIRegistry, egui_cui::CommandState,
+    navigation::LegacyCommandsNavigation,
 };
 
-#[derive(Default)]
 pub struct LegacyCommandsApp {
     console: Arc<Mutex<Console>>,
+    db_pool: Arc<PgPool>,
+    di_registry: Arc<DIRegistry>,
     navigation: LegacyCommandsNavigation,
     command_state: Arc<Mutex<CommandState>>,
 }
 
 impl LegacyCommandsApp {
+    pub fn new(config: Arc<Config>, db_pool: Arc<PgPool>) -> Self {
+        let console = Arc::<Mutex<Console>>::default();
+        let command_state = Arc::<Mutex<CommandState>>::default();
+        let di_registry = DIRegistry::new(console.clone(), command_state.clone(), config);
+
+        Self {
+            db_pool,
+            di_registry: Arc::new(di_registry),
+            navigation: LegacyCommandsNavigation::default(),
+            console,
+            command_state,
+        }
+    }
+
     pub fn show(&mut self, ui: &mut egui::Ui) {
         let command_running = !matches!(&*self.command_state.lock(), CommandState::NotRunning);
 
@@ -43,7 +61,12 @@ impl LegacyCommandsApp {
                 // 実行ボタン
                 let button = ui.button(RichText::new("実行").heading());
                 if button.clicked() {
-                    page.run_command(self.console.clone(), self.command_state.clone());
+                    page.run_command(
+                        self.console.clone(),
+                        self.command_state.clone(),
+                        self.di_registry.clone(),
+                        self.db_pool.clone(),
+                    );
                 }
 
                 ui.add_space(4.0);

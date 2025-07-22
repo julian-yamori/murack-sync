@@ -1,10 +1,12 @@
 use std::sync::Arc;
 
 use eframe::egui::{Ui, mutex::Mutex};
+use sqlx::PgPool;
 
 use crate::legacy_commands::{
     command_pages::{CommandPage, PageType},
     console::Console,
+    di_registry::DIRegistry,
     egui_cui::CommandState,
 };
 
@@ -27,6 +29,8 @@ impl CommandPage for PagePlaylist {
         &mut self,
         console: Arc<Mutex<Console>>,
         _command_state: Arc<Mutex<CommandState>>,
+        _di_registry: Arc<DIRegistry>,
+        _db_pool: Arc<PgPool>,
     ) {
         // TODO: 実際のplaylist処理を実装
 

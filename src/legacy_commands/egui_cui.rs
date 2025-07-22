@@ -1,8 +1,10 @@
+use std::fmt::Arguments;
 use std::sync::Arc;
 use std::sync::mpsc::{self, Sender};
 
 use anyhow::Result;
 use eframe::egui::mutex::Mutex;
+use murack_core_app::cui::Cui;
 
 use crate::legacy_commands::console::Console;
 
@@ -17,13 +19,6 @@ pub enum CommandState {
         message: String,
         choice_sender: Sender<char>,
     },
-}
-
-/// シンプルな Cui トレイト (プロトタイプ用)
-pub trait SimpleCui {
-    fn out_log(&self, message: &str);
-    fn out_error(&self, message: &str);
-    fn input_case(&self, cases: &[char], message: &str) -> Result<char>;
 }
 
 /// egui 用の Cui 実装
@@ -41,13 +36,17 @@ impl EguiCui {
     }
 }
 
-impl SimpleCui for EguiCui {
-    fn out_log(&self, message: &str) {
-        self.console.lock().add_log(message.to_string());
+impl Cui for EguiCui {
+    fn out(&self, args: Arguments) -> anyhow::Result<()> {
+        self.console.lock().add_log(args.to_string());
+
+        Ok(())
     }
 
-    fn out_error(&self, message: &str) {
-        self.console.lock().add_error(message.to_string());
+    fn err(&self, args: Arguments) -> anyhow::Result<()> {
+        self.console.lock().add_error(args.to_string());
+
+        Ok(())
     }
 
     fn input_case(&self, cases: &[char], message: &str) -> Result<char> {

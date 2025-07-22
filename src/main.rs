@@ -1,14 +1,31 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 #![allow(rustdoc::missing_crate_level_docs)] // it's an example
 
+mod config;
+mod database;
 mod legacy_commands;
 
+use std::sync::Arc;
+
 use eframe::egui;
+use murack_core_app::Config;
+use sqlx::PgPool;
 
 use crate::legacy_commands::LegacyCommandsApp;
 
-fn main() -> eframe::Result {
+#[tokio::main]
+async fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
+
+    let config = config::load_config().map_err(|e| eframe::Error::AppCreation(e.into()))?;
+    let config = Arc::new(config);
+
+    // Connect to database
+    let db_pool = database::connect_db_pool(&config.database_url)
+        .await
+        .map_err(|e| eframe::Error::AppCreation(e.into()))?;
+    let db_pool = Arc::new(db_pool);
+
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_inner_size([800.0, 600.0]),
         ..Default::default()
@@ -22,7 +39,11 @@ fn main() -> eframe::Result {
 
             cc.egui_ctx.set_fonts(font_definitions());
 
-            Ok(Box::<MurackSyncApp>::default())
+            Ok(Box::new(MurackSyncApp {
+                legacy_commands_app: LegacyCommandsApp::new(config.clone(), db_pool.clone()),
+                _config: config,
+                _db_pool: db_pool,
+            }))
         }),
     )
 }
@@ -52,8 +73,11 @@ fn font_definitions() -> egui::FontDefinitions {
     fonts
 }
 
-#[derive(Default)]
 struct MurackSyncApp {
+    // legacy commands 以外の正式版の機能で使う予定
+    _config: Arc<Config>,
+    _db_pool: Arc<PgPool>,
+
     legacy_commands_app: LegacyCommandsApp,
 }
 

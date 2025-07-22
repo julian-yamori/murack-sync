@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use eframe::egui::{self, mutex::Mutex};
+use sqlx::PgPool;
 
-use crate::legacy_commands::{console::Console, egui_cui::CommandState};
+use crate::legacy_commands::{console::Console, di_registry::DIRegistry, egui_cui::CommandState};
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum PageType {
@@ -25,5 +26,7 @@ pub trait CommandPage {
         &mut self,
         console: Arc<Mutex<Console>>,
         command_state: Arc<Mutex<CommandState>>,
+        di_registry: Arc<DIRegistry>,
+        db_pool: Arc<PgPool>,
     );
 }
