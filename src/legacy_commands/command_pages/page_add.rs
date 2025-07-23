@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use anyhow::anyhow;
 use eframe::egui::Ui;
+use murack_core_app::command::CommandAddArgs;
 use tokio::task::JoinHandle;
 
 use crate::legacy_commands::{
@@ -39,15 +40,12 @@ impl CommandPage for PageAdd {
                 return Err(anyhow!("追加する曲のパスが未入力です"));
             }
 
-            // TODO: 実際のadd処理を実装
+            let command = di_registry.command_add(CommandAddArgs {
+                path: songs_path.clone().into(),
+            });
+            let db_pool = di_registry.db_pool();
 
-            let console = di_registry.console();
-            let mut console = console.lock();
-
-            console.add_log(format!("[INFO] add コマンドを実行: {songs_path}"));
-            console.add_log("[INFO] add 処理が完了しました".to_string());
-
-            Ok(())
+            command.run(&db_pool).await
         })
     }
 }

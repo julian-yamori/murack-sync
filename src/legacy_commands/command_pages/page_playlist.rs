@@ -25,15 +25,10 @@ impl CommandPage for PagePlaylist {
 
     fn run_command(&mut self, di_registry: Arc<DIRegistry>) -> JoinHandle<anyhow::Result<()>> {
         tokio::spawn(async move {
-            let console = di_registry.console();
-            let mut console = console.lock();
+            let command = di_registry.command_playlist();
+            let db_pool = di_registry.db_pool();
 
-            // TODO: 実際のplaylist処理を実装
-
-            console.add_log("[INFO] playlist コマンドを実行".to_string());
-            console.add_log("[INFO] playlist 処理が完了しました".to_string());
-
-            Ok(())
+            command.run(&db_pool).await
         })
     }
 }

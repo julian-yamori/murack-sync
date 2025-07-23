@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use anyhow::anyhow;
 use eframe::egui::Ui;
+use murack_core_app::command::CommandRemoveArgs;
 use tokio::task::JoinHandle;
 
 use crate::legacy_commands::{
@@ -39,15 +40,12 @@ impl CommandPage for PageRemove {
                 return Err(anyhow!("削除する曲のパスが未入力です"));
             }
 
-            // TODO: 実際のremove処理を実装
+            let command = di_registry.command_remove(CommandRemoveArgs {
+                path: path.clone().into(),
+            });
+            let db_pool = di_registry.db_pool();
 
-            let console = di_registry.console();
-            let mut console = console.lock();
-
-            console.add_log(format!("[INFO] remove コマンドを実行: {path}"));
-            console.add_log("[INFO] remove 処理が完了しました".to_string());
-
-            Ok(())
+            command.run(&db_pool).await
         })
     }
 }

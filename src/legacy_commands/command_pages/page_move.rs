@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use anyhow::anyhow;
 use eframe::egui::Ui;
+use murack_core_app::command::CommandMoveArgs;
 use tokio::task::JoinHandle;
 
 use crate::legacy_commands::{
@@ -46,17 +47,13 @@ impl CommandPage for PageMove {
                 return Err(anyhow!("移動元または移動先のパスが未入力です"));
             }
 
-            // TODO: 実際のmove処理を実装
+            let command = di_registry.command_move(CommandMoveArgs {
+                src_path: src_path.clone().into(),
+                dest_path: dest_path.clone().into(),
+            });
+            let db_pool = di_registry.db_pool();
 
-            let console = di_registry.console();
-            let mut console = console.lock();
-
-            console.add_log(format!(
-                "[INFO] move コマンドを実行: {src_path} -> {dest_path}"
-            ));
-            console.add_log("[INFO] move 処理が完了しました".to_string());
-
-            Ok(())
+            command.run(&db_pool).await
         })
     }
 }

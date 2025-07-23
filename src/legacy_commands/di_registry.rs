@@ -32,6 +32,7 @@ pub struct DIRegistry {
     config: Arc<Config>,
     db_pool: Arc<PgPool>,
     db_registry: DbComponents,
+    #[allow(dead_code)]
     console: Arc<Mutex<Console>>,
 }
 
@@ -55,6 +56,7 @@ impl DIRegistry {
         self.db_pool.clone()
     }
 
+    #[allow(dead_code)]
     pub fn console(&self) -> Arc<Mutex<Console>> {
         self.console.clone()
     }
@@ -62,8 +64,7 @@ impl DIRegistry {
     // -----------------------------
     // Commands
 
-    #[allow(dead_code)] // 実装予定 #11
-    pub fn _command_add(&self, args: CommandAddArgs) -> TypeCommandAdd {
+    pub fn command_add(&self, args: CommandAddArgs) -> TypeCommandAdd {
         let file_library_repository = self.file_library_repository();
         let sync_usecase = self.sync_usecase();
         CommandAdd::new(
@@ -120,8 +121,7 @@ impl DIRegistry {
         )
     }
 
-    #[allow(dead_code)] // 実装予定 #11
-    pub fn _command_move(&self, args: CommandMoveArgs) -> TypeCommandMove {
+    pub fn command_move(&self, args: CommandMoveArgs) -> TypeCommandMove {
         let file_library_repository = self.file_library_repository();
         let song_usecase = self.song_usecase();
         CommandMove::new(
@@ -134,14 +134,12 @@ impl DIRegistry {
         )
     }
 
-    #[allow(dead_code)] // 実装予定 #11
-    pub fn _command_remove(&self, args: CommandRemoveArgs) -> TypeCommandRemove {
+    pub fn command_remove(&self, args: CommandRemoveArgs) -> TypeCommandRemove {
         let song_usecase = self.song_usecase();
         CommandRemove::new(args, &self.config, &self.cui, song_usecase)
     }
 
-    #[allow(dead_code)] // 実装予定 #11
-    pub fn _command_playlist(&self) -> TypeCommandPlaylist {
+    pub fn command_playlist(&self) -> TypeCommandPlaylist {
         let dap_playlist_usecase = self.dap_playlist_usecase();
         CommandPlaylist::new(&self.config, &self.cui, dap_playlist_usecase)
     }
