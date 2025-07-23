@@ -19,6 +19,7 @@ use murack_core_domain::{
     check::CheckUsecaseImpl, dap::DapPlaylistUsecaseImpl, folder::FolderUsecaseImpl,
     song::SongUsecaseImpl, sync::SyncUsecaseImpl,
 };
+use sqlx::PgPool;
 
 use crate::legacy_commands::{
     console::Console,
@@ -29,7 +30,9 @@ use crate::legacy_commands::{
 pub struct DIRegistry {
     cui: EguiCui,
     config: Arc<Config>,
+    db_pool: Arc<PgPool>,
     db_registry: DbComponents,
+    console: Arc<Mutex<Console>>,
 }
 
 impl DIRegistry {
@@ -37,12 +40,23 @@ impl DIRegistry {
         console: Arc<Mutex<Console>>,
         command_state: Arc<Mutex<CommandState>>,
         config: Arc<Config>,
+        db_pool: Arc<PgPool>,
     ) -> Self {
         Self {
-            cui: EguiCui::new(console.clone(), command_state.clone()),
+            cui: EguiCui::new(console.clone(), command_state),
             config,
             db_registry: DbComponents::new(),
+            db_pool,
+            console,
         }
+    }
+
+    pub fn db_pool(&self) -> Arc<PgPool> {
+        self.db_pool.clone()
+    }
+
+    pub fn console(&self) -> Arc<Mutex<Console>> {
+        self.console.clone()
     }
 
     // -----------------------------

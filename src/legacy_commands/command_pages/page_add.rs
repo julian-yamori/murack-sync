@@ -1,13 +1,12 @@
 use std::sync::Arc;
 
-use eframe::egui::{Ui, mutex::Mutex};
-use sqlx::PgPool;
+use anyhow::anyhow;
+use eframe::egui::Ui;
+use tokio::task::JoinHandle;
 
 use crate::legacy_commands::{
     command_pages::{CommandPage, PageType},
-    console::Console,
     di_registry::DIRegistry,
-    egui_cui::CommandState,
 };
 
 /// add コマンドのページ
@@ -32,23 +31,23 @@ impl CommandPage for PageAdd {
         });
     }
 
-    fn run_command(
-        &mut self,
-        console: Arc<Mutex<Console>>,
-        _command_state: Arc<Mutex<CommandState>>,
-        _di_registry: Arc<DIRegistry>,
-        _db_pool: Arc<PgPool>,
-    ) {
-        // TODO: 実際のadd処理を実装
+    fn run_command(&mut self, di_registry: Arc<DIRegistry>) -> JoinHandle<anyhow::Result<()>> {
+        let songs_path = self.songs_path.clone();
 
-        let mut console = console.lock();
+        tokio::spawn(async move {
+            if songs_path.is_empty() {
+                return Err(anyhow!("追加する曲のパスが未入力です"));
+            }
 
-        let path = &self.songs_path;
-        if path.is_empty() {
-            console.add_error("[ERROR] 追加する曲のパスが未入力です".to_owned());
-            return;
-        }
-        console.add_log(format!("[INFO] add コマンドを実行: {path}"));
-        console.add_log("[INFO] add 処理が完了しました".to_string());
+            // TODO: 実際のadd処理を実装
+
+            let console = di_registry.console();
+            let mut console = console.lock();
+
+            console.add_log(format!("[INFO] add コマンドを実行: {songs_path}"));
+            console.add_log("[INFO] add 処理が完了しました".to_string());
+
+            Ok(())
+        })
     }
 }

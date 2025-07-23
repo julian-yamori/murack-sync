@@ -1,14 +1,12 @@
 use std::sync::Arc;
 
-use eframe::egui::{Ui, mutex::Mutex};
+use eframe::egui::Ui;
 use murack_core_app::command::CommandCheckArgs;
-use sqlx::PgPool;
+use tokio::task::JoinHandle;
 
 use crate::legacy_commands::{
     command_pages::{CommandPage, PageType},
-    console::Console,
     di_registry::DIRegistry,
-    egui_cui::CommandState,
 };
 
 /// check コマンドのページ
@@ -38,34 +36,18 @@ impl CommandPage for PageCheck {
         });
     }
 
-    fn run_command(
-        &mut self,
-        console: Arc<Mutex<Console>>,
-        command_state: Arc<Mutex<CommandState>>,
-        di_registry: Arc<DIRegistry>,
-        db_pool: Arc<PgPool>,
-    ) {
-        *command_state.lock() = CommandState::Running;
-
-        // プロトタイプ処理を非同期で実行
+    fn run_command(&mut self, di_registry: Arc<DIRegistry>) -> JoinHandle<anyhow::Result<()>> {
         let target_path = self.target_path.clone();
         let ignore_dap_content = self.ignore_dap_content;
-        let console_clone = console.clone();
-
-        let command_state_clone = command_state.clone();
 
         tokio::spawn(async move {
             let command = di_registry.command_check(CommandCheckArgs {
                 path: target_path.clone().into(),
                 ignore_dap_content,
             });
+            let db_pool = di_registry.db_pool();
 
-            if let Err(e) = command.run(&db_pool).await {
-                console_clone
-                    .lock()
-                    .add_error(format!("[ERROR] check 処理でエラーが発生しました: {e}"));
-            }
-            *command_state_clone.lock() = CommandState::NotRunning;
-        });
+            command.run(&db_pool).await
+        })
     }
 }

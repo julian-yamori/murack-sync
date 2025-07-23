@@ -1,13 +1,12 @@
 use std::sync::Arc;
 
-use eframe::egui::{Ui, mutex::Mutex};
-use sqlx::PgPool;
+use anyhow::anyhow;
+use eframe::egui::Ui;
+use tokio::task::JoinHandle;
 
 use crate::legacy_commands::{
     command_pages::{CommandPage, PageType},
-    console::Console,
     di_registry::DIRegistry,
-    egui_cui::CommandState,
 };
 
 /// remove コマンドのページ
@@ -32,23 +31,23 @@ impl CommandPage for PageRemove {
         });
     }
 
-    fn run_command(
-        &mut self,
-        console: Arc<Mutex<Console>>,
-        _command_state: Arc<Mutex<CommandState>>,
-        _di_registry: Arc<DIRegistry>,
-        _db_pool: Arc<PgPool>,
-    ) {
-        // TODO: 実際のremove処理を実装
+    fn run_command(&mut self, di_registry: Arc<DIRegistry>) -> JoinHandle<anyhow::Result<()>> {
+        let path = self.target_path.clone();
 
-        let mut console = console.lock();
+        tokio::spawn(async move {
+            if path.is_empty() {
+                return Err(anyhow!("削除する曲のパスが未入力です"));
+            }
 
-        let path = &self.target_path;
-        if path.is_empty() {
-            console.add_error("[ERROR] 削除する曲のパスが未入力です".to_owned());
-            return;
-        }
-        console.add_log(format!("[INFO] remove コマンドを実行: {path}"));
-        console.add_log("[INFO] remove 処理が完了しました".to_string());
+            // TODO: 実際のremove処理を実装
+
+            let console = di_registry.console();
+            let mut console = console.lock();
+
+            console.add_log(format!("[INFO] remove コマンドを実行: {path}"));
+            console.add_log("[INFO] remove 処理が完了しました".to_string());
+
+            Ok(())
+        })
     }
 }

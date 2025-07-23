@@ -1,13 +1,11 @@
 use std::sync::Arc;
 
-use eframe::egui::{Ui, mutex::Mutex};
-use sqlx::PgPool;
+use eframe::egui::Ui;
+use tokio::task::JoinHandle;
 
 use crate::legacy_commands::{
     command_pages::{CommandPage, PageType},
-    console::Console,
     di_registry::DIRegistry,
-    egui_cui::CommandState,
 };
 
 /// playlist コマンドのページ
@@ -25,18 +23,17 @@ impl CommandPage for PagePlaylist {
 
     fn show_form(&mut self, _ui: &mut Ui) {}
 
-    fn run_command(
-        &mut self,
-        console: Arc<Mutex<Console>>,
-        _command_state: Arc<Mutex<CommandState>>,
-        _di_registry: Arc<DIRegistry>,
-        _db_pool: Arc<PgPool>,
-    ) {
-        // TODO: 実際のplaylist処理を実装
+    fn run_command(&mut self, di_registry: Arc<DIRegistry>) -> JoinHandle<anyhow::Result<()>> {
+        tokio::spawn(async move {
+            let console = di_registry.console();
+            let mut console = console.lock();
 
-        let mut console = console.lock();
+            // TODO: 実際のplaylist処理を実装
 
-        console.add_log("[INFO] playlist コマンドを実行".to_string());
-        console.add_log("[INFO] playlist 処理が完了しました".to_string());
+            console.add_log("[INFO] playlist コマンドを実行".to_string());
+            console.add_log("[INFO] playlist 処理が完了しました".to_string());
+
+            Ok(())
+        })
     }
 }

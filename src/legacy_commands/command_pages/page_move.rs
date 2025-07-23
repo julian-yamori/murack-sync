@@ -1,13 +1,12 @@
 use std::sync::Arc;
 
-use eframe::egui::{Ui, mutex::Mutex};
-use sqlx::PgPool;
+use anyhow::anyhow;
+use eframe::egui::Ui;
+use tokio::task::JoinHandle;
 
 use crate::legacy_commands::{
     command_pages::{CommandPage, PageType},
-    console::Console,
     di_registry::DIRegistry,
-    egui_cui::CommandState,
 };
 
 /// move コマンドのページ
@@ -38,26 +37,26 @@ impl CommandPage for PageMove {
         });
     }
 
-    fn run_command(
-        &mut self,
-        console: Arc<Mutex<Console>>,
-        _command_state: Arc<Mutex<CommandState>>,
-        _di_registry: Arc<DIRegistry>,
-        _db_pool: Arc<PgPool>,
-    ) {
-        // TODO: 実際のmove処理を実装
+    fn run_command(&mut self, di_registry: Arc<DIRegistry>) -> JoinHandle<anyhow::Result<()>> {
+        let src_path = self.src_path.clone();
+        let dest_path = self.dest_path.clone();
 
-        let mut console = console.lock();
+        tokio::spawn(async move {
+            if src_path.is_empty() || dest_path.is_empty() {
+                return Err(anyhow!("移動元または移動先のパスが未入力です"));
+            }
 
-        let src_path = &self.src_path;
-        let dest_path = &self.dest_path;
-        if src_path.is_empty() || dest_path.is_empty() {
-            console.add_error("[ERROR] 移動元または移動先のパスが未入力です".to_owned());
-            return;
-        }
-        console.add_log(format!(
-            "[INFO] move コマンドを実行: {src_path} -> {dest_path}"
-        ));
-        console.add_log("[INFO] move 処理が完了しました".to_string());
+            // TODO: 実際のmove処理を実装
+
+            let console = di_registry.console();
+            let mut console = console.lock();
+
+            console.add_log(format!(
+                "[INFO] move コマンドを実行: {src_path} -> {dest_path}"
+            ));
+            console.add_log("[INFO] move 処理が完了しました".to_string());
+
+            Ok(())
+        })
     }
 }

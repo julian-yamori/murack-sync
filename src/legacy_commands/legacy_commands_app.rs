@@ -5,13 +5,12 @@ use murack_core_app::Config;
 use sqlx::PgPool;
 
 use crate::legacy_commands::{
-    console::Console, di_registry::DIRegistry, egui_cui::CommandState,
+    command_pages::CommandPage, console::Console, di_registry::DIRegistry, egui_cui::CommandState,
     navigation::LegacyCommandsNavigation,
 };
 
 pub struct LegacyCommandsApp {
     console: Arc<Mutex<Console>>,
-    db_pool: Arc<PgPool>,
     di_registry: Arc<DIRegistry>,
     navigation: LegacyCommandsNavigation,
     command_state: Arc<Mutex<CommandState>>,
@@ -21,10 +20,9 @@ impl LegacyCommandsApp {
     pub fn new(config: Arc<Config>, db_pool: Arc<PgPool>) -> Self {
         let console = Arc::<Mutex<Console>>::default();
         let command_state = Arc::<Mutex<CommandState>>::default();
-        let di_registry = DIRegistry::new(console.clone(), command_state.clone(), config);
+        let di_registry = DIRegistry::new(console.clone(), command_state.clone(), config, db_pool);
 
         Self {
-            db_pool,
             di_registry: Arc::new(di_registry),
             navigation: LegacyCommandsNavigation::default(),
             console,
@@ -61,11 +59,11 @@ impl LegacyCommandsApp {
                 // 実行ボタン
                 let button = ui.button(RichText::new("実行").heading());
                 if button.clicked() {
-                    page.run_command(
+                    run_command(
+                        page,
                         self.console.clone(),
                         self.command_state.clone(),
                         self.di_registry.clone(),
-                        self.db_pool.clone(),
                     );
                 }
 
@@ -109,4 +107,25 @@ impl LegacyCommandsApp {
             self.console.lock().show(ui);
         });
     }
+}
+
+fn run_command(
+    current_page: &mut dyn CommandPage,
+    console: Arc<Mutex<Console>>,
+    command_state: Arc<Mutex<CommandState>>,
+    di_registry: Arc<DIRegistry>,
+) {
+    *command_state.lock() = CommandState::Running;
+
+    let command_handle = current_page.run_command(di_registry.clone());
+
+    tokio::spawn(async move {
+        let command_result = command_handle.await;
+
+        *command_state.lock() = CommandState::NotRunning;
+
+        if let Err(e) = command_result {
+            console.lock().add_error(e.to_string());
+        }
+    });
 }

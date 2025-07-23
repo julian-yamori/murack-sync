@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use eframe::egui::{self, mutex::Mutex};
-use sqlx::PgPool;
+use eframe::egui;
+use tokio::task::JoinHandle;
 
-use crate::legacy_commands::{console::Console, di_registry::DIRegistry, egui_cui::CommandState};
+use crate::legacy_commands::di_registry::DIRegistry;
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum PageType {
@@ -22,11 +22,5 @@ pub trait CommandPage {
 
     fn show_form(&mut self, ui: &mut egui::Ui);
 
-    fn run_command(
-        &mut self,
-        console: Arc<Mutex<Console>>,
-        command_state: Arc<Mutex<CommandState>>,
-        di_registry: Arc<DIRegistry>,
-        db_pool: Arc<PgPool>,
-    );
+    fn run_command(&mut self, di_registry: Arc<DIRegistry>) -> JoinHandle<anyhow::Result<()>>;
 }
