@@ -2458,6 +2458,7 @@ dependencies = [
  "mockall",
  "murack-core-domain",
  "murack-core-media",
+ "serde",
  "sqlx",
  "thiserror 2.0.12",
  "toml 0.9.2",
