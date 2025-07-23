@@ -38,12 +38,22 @@ impl EguiCui {
 
 impl Cui for EguiCui {
     fn out(&self, args: Arguments) -> anyhow::Result<()> {
+        // ほんとは改行せず連結すべきだけど、改行なしの追加ができる設計になってないのでとりあえず
+        self.outln(args)
+    }
+
+    fn outln(&self, args: Arguments) -> anyhow::Result<()> {
         self.console.lock().add_log(args.to_string());
 
         Ok(())
     }
 
     fn err(&self, args: Arguments) -> anyhow::Result<()> {
+        // ほんとは改行せず連結すべきだけど、改行なしの追加ができる設計になってないのでとりあえず
+        self.errln(args)
+    }
+
+    fn errln(&self, args: Arguments) -> anyhow::Result<()> {
         self.console.lock().add_error(args.to_string());
 
         Ok(())
