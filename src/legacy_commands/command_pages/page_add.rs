@@ -13,7 +13,7 @@ use crate::legacy_commands::{
 /// add コマンドのページ
 #[derive(Default)]
 pub struct PageAdd {
-    songs_path: String,
+    tracks_path: String,
 }
 
 impl CommandPage for PageAdd {
@@ -28,20 +28,20 @@ impl CommandPage for PageAdd {
     fn show_form(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             ui.label("追加する曲のライブラリパス:");
-            ui.text_edit_singleline(&mut self.songs_path);
+            ui.text_edit_singleline(&mut self.tracks_path);
         });
     }
 
     fn run_command(&mut self, di_registry: Arc<DIRegistry>) -> JoinHandle<anyhow::Result<()>> {
-        let songs_path = self.songs_path.clone();
+        let tracks_path = self.tracks_path.clone();
 
         tokio::spawn(async move {
-            if songs_path.is_empty() {
+            if tracks_path.is_empty() {
                 return Err(anyhow!("追加する曲のパスが未入力です"));
             }
 
             let command = di_registry.command_add(CommandAddArgs {
-                path: songs_path.clone().into(),
+                path: tracks_path.clone().into(),
             });
             let db_pool = di_registry.db_pool();
 
