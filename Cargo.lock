@@ -2454,8 +2454,10 @@ name = "murack-core-app"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-recursion",
  "async-trait",
  "mockall",
+ "murack-core-data-file",
  "murack-core-domain",
  "murack-core-media",
  "serde",
