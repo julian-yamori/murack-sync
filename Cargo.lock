@@ -2467,23 +2467,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "murack-core-data-db"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-recursion",
- "async-trait",
- "chrono",
- "derive-new",
- "mockall",
- "murack-core-domain",
- "murack-core-media",
- "once_cell",
- "sqlx",
- "thiserror 2.0.12",
-]
-
-[[package]]
 name = "murack-core-data-file"
 version = "0.1.0"
 dependencies = [
@@ -2537,7 +2520,6 @@ dependencies = [
  "egui_extras",
  "env_logger",
  "murack-core-app",
- "murack-core-data-db",
  "murack-core-data-file",
  "murack-core-domain",
  "sqlx",
