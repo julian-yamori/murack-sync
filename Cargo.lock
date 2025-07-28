@@ -2479,7 +2479,6 @@ dependencies = [
  "murack-core-domain",
  "murack-core-media",
  "once_cell",
- "serde_json",
  "sqlx",
  "thiserror 2.0.12",
 ]
@@ -2508,6 +2507,7 @@ dependencies = [
  "murack-core-media",
  "once_cell",
  "serde",
+ "serde_json",
  "sqlx",
  "thiserror 2.0.12",
 ]
