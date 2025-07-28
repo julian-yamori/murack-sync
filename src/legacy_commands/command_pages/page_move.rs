@@ -3,6 +3,7 @@ use std::sync::Arc;
 use anyhow::anyhow;
 use eframe::egui::Ui;
 use murack_core_app::command::CommandMoveArgs;
+use murack_core_domain::{EmptyStringError, NonEmptyString};
 use tokio::task::JoinHandle;
 
 use crate::legacy_commands::{
@@ -43,13 +44,23 @@ impl CommandPage for PageMove {
         let dest_path = self.dest_path.clone();
 
         tokio::spawn(async move {
-            if src_path.is_empty() || dest_path.is_empty() {
-                return Err(anyhow!("移動元または移動先のパスが未入力です"));
-            }
+            let src_path: NonEmptyString = match src_path.try_into() {
+                Ok(s) => s,
+                Err(EmptyStringError) => {
+                    return Err(anyhow!("移動元のパスが未入力です"));
+                }
+            };
+
+            let dest_path: NonEmptyString = match dest_path.try_into() {
+                Ok(s) => s,
+                Err(EmptyStringError) => {
+                    return Err(anyhow!("移動先のパスが未入力です"));
+                }
+            };
 
             let command = di_registry.command_move(CommandMoveArgs {
-                src_path: src_path.clone().into(),
-                dest_path: dest_path.clone().into(),
+                src_path,
+                dest_path,
             });
             let db_pool = di_registry.db_pool();
 

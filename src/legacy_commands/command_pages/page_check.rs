@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use eframe::egui::Ui;
 use murack_core_app::command::CommandCheckArgs;
+use murack_core_domain::NonEmptyString;
 use tokio::task::JoinHandle;
 
 use crate::legacy_commands::{
@@ -37,12 +38,12 @@ impl CommandPage for PageCheck {
     }
 
     fn run_command(&mut self, di_registry: Arc<DIRegistry>) -> JoinHandle<anyhow::Result<()>> {
-        let target_path = self.target_path.clone();
+        let target_path: Option<NonEmptyString> = self.target_path.clone().try_into().ok();
         let ignore_dap_content = self.ignore_dap_content;
 
         tokio::spawn(async move {
             let command = di_registry.command_check(CommandCheckArgs {
-                path: target_path.clone().into(),
+                path: target_path,
                 ignore_dap_content,
             });
             let db_pool = di_registry.db_pool();

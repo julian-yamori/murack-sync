@@ -3,6 +3,7 @@ use std::sync::Arc;
 use anyhow::anyhow;
 use eframe::egui::Ui;
 use murack_core_app::command::CommandRemoveArgs;
+use murack_core_domain::{EmptyStringError, NonEmptyString};
 use tokio::task::JoinHandle;
 
 use crate::legacy_commands::{
@@ -33,16 +34,15 @@ impl CommandPage for PageRemove {
     }
 
     fn run_command(&mut self, di_registry: Arc<DIRegistry>) -> JoinHandle<anyhow::Result<()>> {
-        let path = self.target_path.clone();
+        let target_path = self.target_path.clone();
 
         tokio::spawn(async move {
-            if path.is_empty() {
-                return Err(anyhow!("削除する曲のパスが未入力です"));
-            }
+            let target_path: NonEmptyString = match target_path.try_into() {
+                Ok(s) => s,
+                Err(EmptyStringError) => return Err(anyhow!("削除する曲のパスが未入力です")),
+            };
 
-            let command = di_registry.command_remove(CommandRemoveArgs {
-                path: path.clone().into(),
-            });
+            let command = di_registry.command_remove(CommandRemoveArgs { path: target_path });
             let db_pool = di_registry.db_pool();
 
             command.run(&db_pool).await
