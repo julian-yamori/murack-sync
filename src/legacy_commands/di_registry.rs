@@ -13,7 +13,7 @@ use murack_core_domain::{
     db_components::{
         DbComponents, TypeDbArtworkRepository, TypeDbFolderRepository, TypeDbPlaylistRepository,
         TypeDbPlaylistTrackRepository, TypeDbTrackRepository, TypeDbTrackSyncRepository,
-        TypeDbTrackTagRepository, TypeTrackFinder,
+        TypeDbTrackTagRepository,
     },
     folder::FolderUsecaseImpl,
     sync::SyncUsecaseImpl,
@@ -112,7 +112,6 @@ impl DIRegistry {
             config: &self.config,
             cui: &self.cui,
             db_playlist_repository: self.db_registry.db_playlist_repository(),
-            track_finder: self.db_registry.track_finder(),
         }
     }
 
@@ -175,7 +174,7 @@ pub type TypeCommandMove<'config> =
     CommandMove<'config, TypeDbTrackRepository, TypeDbFolderRepository, TypeTrackUsecase>;
 pub type TypeCommandRemove<'config, 'cui> = CommandRemove<'config, 'cui, EguiCui, TypeTrackUsecase>;
 pub type TypeCommandPlaylist<'config, 'cui> =
-    CommandPlaylist<'config, 'cui, EguiCui, TypeDbPlaylistRepository, TypeTrackFinder>;
+    CommandPlaylist<'config, 'cui, EguiCui, TypeDbPlaylistRepository>;
 
 type TypeFolderUsecase = FolderUsecaseImpl<TypeDbFolderRepository, TypeDbTrackRepository>;
 type TypeTrackUsecase = TrackUsecaseImpl<
