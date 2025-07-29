@@ -9,16 +9,6 @@ use murack_core_app::{
         ResolveExistanceImpl,
     },
 };
-use murack_core_domain::{
-    db_components::{
-        DbComponents, TypeDbArtworkRepository, TypeDbFolderRepository, TypeDbPlaylistRepository,
-        TypeDbPlaylistTrackRepository, TypeDbTrackRepository, TypeDbTrackSyncRepository,
-        TypeDbTrackTagRepository,
-    },
-    folder::FolderUsecaseImpl,
-    sync::SyncUsecaseImpl,
-    track::TrackUsecaseImpl,
-};
 use sqlx::PgPool;
 
 use crate::legacy_commands::{
@@ -31,7 +21,6 @@ pub struct DIRegistry {
     cui: EguiCui,
     config: Arc<Config>,
     db_pool: Arc<PgPool>,
-    db_registry: DbComponents,
     #[allow(dead_code)]
     console: Arc<Mutex<Console>>,
 }
@@ -46,7 +35,6 @@ impl DIRegistry {
         Self {
             cui: EguiCui::new(console.clone(), command_state),
             config,
-            db_registry: DbComponents::new(),
             db_pool,
             console,
         }
@@ -65,126 +53,45 @@ impl DIRegistry {
     // Commands
 
     pub fn command_add(&self, args: CommandAddArgs) -> TypeCommandAdd {
-        CommandAdd::new(args, &self.config, &self.cui, self.sync_usecase())
+        CommandAdd::new(args, &self.config, &self.cui)
     }
 
     pub fn command_check(&self, args: CommandCheckArgs) -> TypeCommandCheck {
         CommandCheck::new(
             args,
             &self.config,
-            ResolveExistanceImpl::new(
-                &self.config,
-                &self.cui,
-                self.track_usecase(),
-                self.sync_usecase(),
-                self.db_registry.db_track_sync_repository(),
-            ),
-            ResolveDataMatchImpl::new(
-                &self.config,
-                &self.cui,
-                self.db_registry.db_artwork_repository(),
-                self.db_registry.db_track_sync_repository(),
-            ),
+            ResolveExistanceImpl::new(&self.config, &self.cui),
+            ResolveDataMatchImpl::new(&self.config, &self.cui),
             ResolveDapImpl::new(&self.config, &self.cui),
             &self.cui,
-            self.db_registry.db_track_repository(),
-            self.db_registry.db_track_sync_repository(),
         )
     }
 
     pub fn command_move(&self, args: CommandMoveArgs) -> TypeCommandMove {
-        CommandMove::new(
-            args,
-            &self.config,
-            self.db_registry.db_track_repository(),
-            self.db_registry.db_folder_repository(),
-            self.track_usecase(),
-        )
+        CommandMove::new(args, &self.config)
     }
 
     pub fn command_remove(&self, args: CommandRemoveArgs) -> TypeCommandRemove {
-        let track_usecase = self.track_usecase();
-        CommandRemove::new(args, &self.config, &self.cui, track_usecase)
+        CommandRemove::new(args, &self.config, &self.cui)
     }
 
     pub fn command_playlist(&self) -> TypeCommandPlaylist {
         CommandPlaylist {
             config: &self.config,
             cui: &self.cui,
-            db_playlist_repository: self.db_registry.db_playlist_repository(),
         }
-    }
-
-    // -----------------------------
-    // Domain Services
-
-    fn folder_usecase(&self) -> TypeFolderUsecase {
-        FolderUsecaseImpl::new(
-            self.db_registry.db_folder_repository(),
-            self.db_registry.db_track_repository(),
-        )
-    }
-
-    fn track_usecase(&self) -> TypeTrackUsecase {
-        TrackUsecaseImpl::new(
-            self.db_registry.db_artwork_repository(),
-            self.db_registry.db_folder_repository(),
-            self.db_registry.db_playlist_repository(),
-            self.db_registry.db_playlist_track_repository(),
-            self.db_registry.db_track_repository(),
-            self.db_registry.db_track_tag_repository(),
-            self.folder_usecase(),
-        )
-    }
-
-    fn sync_usecase(&self) -> TypeSyncUsecase {
-        SyncUsecaseImpl::new(
-            self.db_registry.db_folder_repository(),
-            self.db_registry.db_playlist_repository(),
-            self.db_registry.db_track_sync_repository(),
-        )
     }
 }
 
-pub type TypeCommandAdd<'config, 'cui> = CommandAdd<'config, 'cui, EguiCui, TypeSyncUsecase>;
+pub type TypeCommandAdd<'config, 'cui> = CommandAdd<'config, 'cui, EguiCui>;
 pub type TypeCommandCheck<'config, 'cui> = CommandCheck<
     'config,
     'cui,
     EguiCui,
-    ResolveExistanceImpl<
-        'config,
-        'cui,
-        EguiCui,
-        TypeTrackUsecase,
-        TypeSyncUsecase,
-        TypeDbTrackSyncRepository,
-    >,
-    ResolveDataMatchImpl<
-        'config,
-        'cui,
-        EguiCui,
-        TypeDbArtworkRepository,
-        TypeDbTrackSyncRepository,
-    >,
+    ResolveExistanceImpl<'config, 'cui, EguiCui>,
+    ResolveDataMatchImpl<'config, 'cui, EguiCui>,
     ResolveDapImpl<'config, 'cui, EguiCui>,
-    TypeDbTrackRepository,
-    TypeDbTrackSyncRepository,
 >;
-pub type TypeCommandMove<'config> =
-    CommandMove<'config, TypeDbTrackRepository, TypeDbFolderRepository, TypeTrackUsecase>;
-pub type TypeCommandRemove<'config, 'cui> = CommandRemove<'config, 'cui, EguiCui, TypeTrackUsecase>;
-pub type TypeCommandPlaylist<'config, 'cui> =
-    CommandPlaylist<'config, 'cui, EguiCui, TypeDbPlaylistRepository>;
-
-type TypeFolderUsecase = FolderUsecaseImpl<TypeDbFolderRepository, TypeDbTrackRepository>;
-type TypeTrackUsecase = TrackUsecaseImpl<
-    TypeDbArtworkRepository,
-    TypeDbFolderRepository,
-    TypeDbPlaylistRepository,
-    TypeDbPlaylistTrackRepository,
-    TypeDbTrackRepository,
-    TypeDbTrackTagRepository,
-    TypeFolderUsecase,
->;
-type TypeSyncUsecase =
-    SyncUsecaseImpl<TypeDbFolderRepository, TypeDbPlaylistRepository, TypeDbTrackSyncRepository>;
+pub type TypeCommandMove<'config> = CommandMove<'config>;
+pub type TypeCommandRemove<'config, 'cui> = CommandRemove<'config, 'cui, EguiCui>;
+pub type TypeCommandPlaylist<'config, 'cui> = CommandPlaylist<'config, 'cui, EguiCui>;
