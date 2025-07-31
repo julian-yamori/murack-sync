@@ -22,7 +22,6 @@ env_logger = { version = "0.10", default-features = false, features = [
 anyhow = "1.0"
 directories-next = "2.0.0"
 murack-core-app = { path = "../murack-core/app" } 
-murack-core-data-file = { path = "../murack-core/data_file" } 
 murack-core-domain = { path = "../murack-core/domain" } 
 sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio-rustls"] }
 tokio = { version = "1.0", features = ["full"] }
