@@ -2449,6 +2449,7 @@ dependencies = [
  "mockall",
  "murack-core-domain",
  "murack-core-media",
+ "once_cell",
  "serde",
  "sqlx",
  "thiserror 2.0.12",
